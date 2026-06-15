@@ -27,8 +27,9 @@ except ImportError as e:
     print(f"Error: {e}")
     raise
 
-XLS_FILE = "listedCompanies_en_US.xlsx"
-OUT_FILE  = "set_data.json"
+XLS_FILE     = "listedCompanies_en_US.xlsx"
+OUT_FILE     = "set_data.json"
+HISTORY_FILE = "set_history.json"
 
 
 # ============================================================
@@ -70,8 +71,8 @@ def load_set_symbols(base_dir=None):
 
     symbols = []
     for _, row in df.iterrows():
-        sym = str(row.get(col_map.get("symbol", ""), "")).strip()
-        if not sym or sym in ("nan", "Symbol"):
+        sym = str(row.get(col_map.get("symbol", ""), "")).strip().upper()
+        if not sym or sym in ("nan", "Symbol", "NAN"):
             continue
         market = str(row.get(col_map.get("market", ""), "")).strip()
         if market not in ("SET", "mai", ""):
@@ -108,6 +109,74 @@ _FUND_PAT = _re.compile(
 
 def _is_reit(symbol: str) -> bool:
     return bool(_FUND_PAT.search(symbol))
+
+
+# ============================================================
+# 1b. History helpers — load / merge / save set_history.json
+# ============================================================
+
+def load_history(base_dir):
+    path = os.path.join(base_dir, HISTORY_FILE)
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _merge_history(existing, new_dates, new_closes, new_volumes):
+    """Merge new bars into existing, deduplicate by date, keep sorted."""
+    if not existing or not existing.get("dates"):
+        return new_dates, new_closes, new_volumes
+    exist_set = set(existing["dates"])
+    all_d = list(existing["dates"])
+    all_c = list(existing["closes"])
+    all_v = list(existing["volumes"])
+    for d, c, v in zip(new_dates, new_closes, new_volumes):
+        if d not in exist_set:
+            all_d.append(d)
+            all_c.append(c)
+            all_v.append(v)
+    triples = sorted(zip(all_d, all_c, all_v))
+    if not triples:
+        return [], [], []
+    dates, closes, volumes = zip(*triples)
+    return list(dates), list(closes), list(volumes)
+
+
+def save_history(all_data_map, base_dir, existing_hist=None):
+    """
+    all_data_map: {ticker -> {close: pd.Series, volume: pd.Series}}
+    Merges with existing_hist and writes set_history.json.
+    Returns the new history dict.
+    """
+    stocks_hist = {}
+    if existing_hist:
+        stocks_hist = dict(existing_hist.get("stocks", {}))
+
+    for ticker, data in all_data_map.items():
+        close  = data["close"]
+        volume = data["volume"]
+        new_dates   = [d.strftime("%Y-%m-%d") for d in close.index]
+        new_closes  = [round(float(c), 4) for c in close]
+        new_volumes = [int(v) for v in volume]
+        existing = stocks_hist.get(ticker)
+        merged_d, merged_c, merged_v = _merge_history(
+            existing, new_dates, new_closes, new_volumes
+        )
+        stocks_hist[ticker] = {
+            "dates":   merged_d,
+            "closes":  merged_c,
+            "volumes": merged_v,
+        }
+
+    new_hist = {
+        "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "stocks": stocks_hist,
+    }
+    path = os.path.join(base_dir, HISTORY_FILE)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(new_hist, f, ensure_ascii=False)
+    return new_hist
 
 
 # ============================================================
@@ -172,13 +241,18 @@ def process_stock(info_dict, close, volume):
         valid = [(v, w) for v, w in parts if v is not None]
         rs_raw = round(sum(v * w for v, w in valid) / sum(w for _, w in valid), 4) if valid else None
 
-        vol_20 = int(volume.tail(20).mean()) if len(volume) >= 20 else None
+        # RVOL: avg ไม่รวมวันนี้ (tail(21) ตัดวันสุดท้าย) — ป้องกัน self-reference
+        vol_20    = int(volume.tail(21).iloc[:-1].mean()) if len(volume) >= 21 else None
+        vol_today = int(volume.iloc[-1]) if len(volume) > 0 else None
 
+        # price_history: เก็บแค่ 260 วันทำการล่าสุด (~1 ปี) เพื่อไม่ให้ JSON ใหญ่เกิน
+        _hist_bars = min(len(close), 260)
         price_history = [
             [d.strftime("%Y-%m-%d"), round(float(p), 2)]
-            for d, p in zip(dates, close)
+            for d, p in zip(dates[-_hist_bars:], close.tail(_hist_bars))
         ]
 
+        _ath = float(close.max())
         return {
             "symbol":       info_dict["symbol"],
             "ticker":       info_dict["ticker"],
@@ -205,8 +279,12 @@ def process_stock(info_dict, close, volume):
             "rs_raw":       rs_raw,
             "rs_score":     None,
             "vol_avg20":    vol_20,
+            "vol_today":    vol_today,
             "high_52w":     round(float(close.tail(260).max()), 2),
             "low_52w":      round(float(close.tail(260).min()), 2),
+            "ath":          round(_ath, 2),
+            "ath_pct":      round((price - _ath) / _ath * 100, 2) if _ath > 0 else None,
+
             "pe":           None,
             "pbv":          None,
             "div_yield":    None,
@@ -223,7 +301,7 @@ def process_stock(info_dict, close, volume):
 BATCH_SIZE = 100
 
 
-def fetch_all_batch(tickers, callback=None):
+def fetch_all_batch(tickers, callback=None, period="max"):
     """
     ดาวน์โหลดราคาทุกตัวด้วย yf.download() แบบ batch
     คืนค่า dict: ticker -> {'close': pd.Series, 'volume': pd.Series}
@@ -236,12 +314,12 @@ def fetch_all_batch(tickers, callback=None):
         done_so_far = ci * BATCH_SIZE
         if callback:
             callback(done_so_far, len(tickers),
-                     f"ดาวน์โหลด batch {ci + 1}/{n_chunks} ({len(chunk)} หุ้น)...")
+                     f"ดาวน์โหลด batch {ci + 1}/{n_chunks} ({len(chunk)} หุ้น, period={period})...")
 
         try:
             if len(chunk) == 1:
                 raw = yf.download(
-                    chunk[0], period="1y", auto_adjust=True,
+                    chunk[0], period=period, auto_adjust=True,
                     progress=False, threads=False,
                 )
                 if not raw.empty and len(raw) >= 5:
@@ -251,7 +329,7 @@ def fetch_all_batch(tickers, callback=None):
                         all_data[chunk[0]] = {"close": close, "volume": volume}
             else:
                 raw = yf.download(
-                    chunk, period="1y", auto_adjust=True,
+                    chunk, period=period, auto_adjust=True,
                     progress=False, group_by="ticker", threads=True,
                 )
                 for tick in chunk:
@@ -264,6 +342,53 @@ def fetch_all_batch(tickers, callback=None):
                         pass
         except Exception as e:
             print(f"  [batch {ci + 1}] error: {e}")
+
+        time.sleep(0.3)
+
+    return all_data
+
+
+def fetch_gap_batch(tickers, start_date, callback=None):
+    """
+    ดาวน์โหลดเฉพาะวันใหม่ตั้งแต่ start_date (สำหรับ Quick Update)
+    คืนค่า dict: ticker -> {'close': pd.Series, 'volume': pd.Series}
+    """
+    chunks = [tickers[i:i + BATCH_SIZE] for i in range(0, len(tickers), BATCH_SIZE)]
+    n_chunks = len(chunks)
+    all_data = {}
+
+    for ci, chunk in enumerate(chunks):
+        done_so_far = ci * BATCH_SIZE
+        if callback:
+            callback(done_so_far, len(tickers),
+                     f"ดาวน์โหลด gap batch {ci + 1}/{n_chunks} ({len(chunk)} หุ้น)...")
+
+        try:
+            if len(chunk) == 1:
+                raw = yf.download(
+                    chunk[0], start=start_date, auto_adjust=True,
+                    progress=False, threads=False,
+                )
+                if not raw.empty:
+                    close  = raw["Close"].dropna()
+                    volume = raw["Volume"].dropna()
+                    if len(close) >= 1:
+                        all_data[chunk[0]] = {"close": close, "volume": volume}
+            else:
+                raw = yf.download(
+                    chunk, start=start_date, auto_adjust=True,
+                    progress=False, group_by="ticker", threads=True,
+                )
+                for tick in chunk:
+                    try:
+                        close  = raw[tick]["Close"].dropna()
+                        volume = raw[tick]["Volume"].dropna()
+                        if len(close) >= 1:
+                            all_data[tick] = {"close": close, "volume": volume}
+                    except Exception:
+                        pass
+        except Exception as e:
+            print(f"  [gap batch {ci + 1}] error: {e}")
 
         time.sleep(0.3)
 
@@ -299,7 +424,9 @@ def fetch_market_caps_parallel(tickers, callback=None, workers=3):
                 pbv  = info.get("priceToBook")
                 dy   = info.get("dividendYield")
                 # yfinance .BK คืน % (5.83) แต่ถ้าเปลี่ยนเป็น decimal (0.0583) ให้ normalize
-                if dy is not None and float(dy) < 1.0:
+                # yfinance .BK ปกติคืน % (5.83) แต่บางครั้ง decimal (0.0583)
+                # ใช้ threshold 0.20: ค่า < 0.20 แน่นอนว่าเป็น decimal (SET ไม่มีหุ้นปันผล < 0.2%)
+                if dy is not None and 0 < float(dy) < 0.20:
                     dy = float(dy) * 100
                 return tick, {
                     "mkt_cap":   int(mc)          if mc  is not None else None,
@@ -396,9 +523,10 @@ def sanitize(obj):
 # 5. run_with_progress — API สำหรับ Flask
 # ============================================================
 
-def run_with_progress(callback, base_dir=None):
+def run_with_progress(callback, base_dir=None, period="max"):
     """
-    ดึงข้อมูลทั้งหมดและบันทึก set_data.json
+    Full Refresh: ดาวน์โหลด history ทุกตัว บันทึก set_history.json + set_data.json
+    period: "2y" | "5y" | "10y" | "max"
     callback(current: int, total: int, message: str)
     """
     if base_dir is None:
@@ -408,11 +536,15 @@ def run_with_progress(callback, base_dir=None):
     symbols = load_set_symbols(base_dir)
     total   = len(symbols)
 
-    callback(0, total, f"พบ {total} หุ้น — เริ่ม batch download...")
+    callback(0, total, f"พบ {total} หุ้น — เริ่ม batch download ({period} history)...")
 
     tickers  = [s["ticker"] for s in symbols]
     sym_map  = {s["ticker"]: s for s in symbols}
-    all_data = fetch_all_batch(tickers, callback=callback)
+    all_data = fetch_all_batch(tickers, callback=callback, period=period)
+
+    callback(total, total, f"บันทึก set_history.json ({len(all_data)} หุ้น)...")
+    existing_hist = load_history(base_dir)
+    save_history(all_data, base_dir, existing_hist=existing_hist)
 
     callback(total, total, f"ดาวน์โหลดเสร็จ — คำนวณ metrics ({len(all_data)}/{total} หุ้น)...")
 
@@ -464,7 +596,110 @@ def run_with_progress(callback, base_dir=None):
 
 
 # ============================================================
-# 6. Standalone (python set_data_fetcher.py)
+# 6. run_quick_update — ดาวน์โหลดแค่วันที่ขาด แล้ว recalculate
+# ============================================================
+
+def run_quick_update(callback, base_dir=None):
+    """
+    Quick Update: โหลด set_history.json → download gap → recalculate metrics
+    ไม่ดึง fundamentals (ใช้ค่าเดิม) → บันทึก set_history.json + set_data.json
+    """
+    if base_dir is None:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    callback(0, 100, "โหลด set_history.json...")
+    history = load_history(base_dir)
+    if not history:
+        raise ValueError("ไม่พบ set_history.json — กรุณา Full Refresh ก่อน")
+
+    # หา last date ที่เก่าที่สุดในทุกหุ้น (เพื่อครอบคลุมหุ้นที่ตามหลัง)
+    last_dates = [
+        data["dates"][-1]
+        for data in history["stocks"].values()
+        if data.get("dates")
+    ]
+    if not last_dates:
+        raise ValueError("ไม่มีข้อมูลใน history")
+
+    min_last  = min(last_dates)
+    start_dt  = pd.to_datetime(min_last) + pd.Timedelta(days=1)
+    today     = pd.Timestamp.now().normalize()
+
+    if start_dt > today:
+        callback(100, 100, "ข้อมูลเป็นปัจจุบันแล้ว ไม่มีวันใหม่")
+        return
+
+    start_date = start_dt.strftime("%Y-%m-%d")
+    callback(0, 100, f"ดาวน์โหลดข้อมูลใหม่ตั้งแต่ {start_date}...")
+
+    symbols = load_set_symbols(base_dir)
+    total   = len(symbols)
+    tickers = [s["ticker"] for s in symbols]
+
+    new_data = fetch_gap_batch(tickers, start_date, callback=callback)
+    if not new_data:
+        callback(100, 100, "ไม่มีข้อมูลใหม่ (อาจเป็นวันหยุด)")
+        return
+
+    callback(total, total, f"Merge history ({len(new_data)} หุ้น มีข้อมูลใหม่)...")
+    history = save_history(new_data, base_dir, existing_hist=history)
+
+    callback(0, total, f"คำนวณ metrics ใหม่ ({total} หุ้น)...")
+    stocks = []
+    for i, info_dict in enumerate(symbols):
+        tick      = info_dict["ticker"]
+        hist_data = history["stocks"].get(tick)
+        if not hist_data or not hist_data.get("dates"):
+            continue
+        try:
+            dates  = pd.to_datetime(hist_data["dates"])
+            close  = pd.Series(hist_data["closes"],  index=dates, dtype=float)
+            volume = pd.Series(hist_data["volumes"], index=dates, dtype=float)
+        except Exception:
+            continue
+        result = process_stock(info_dict, close, volume)
+        if result:
+            stocks.append(result)
+        if i % 100 == 0:
+            callback(i, total, f"คำนวณ {i}/{total}...")
+
+    # คงค่า fundamentals เดิมไว้ (ไม่ดึงใหม่ใน Quick Update)
+    existing_data_path = os.path.join(base_dir, OUT_FILE)
+    if os.path.exists(existing_data_path):
+        try:
+            with open(existing_data_path, encoding="utf-8") as f:
+                old = json.load(f)
+            fund_map = {s["ticker"]: {k: s.get(k) for k in ("mkt_cap","pe","pbv","div_yield")}
+                        for s in old.get("stocks", [])}
+            for s in stocks:
+                fund = fund_map.get(s["ticker"]) or {}
+                for k in ("mkt_cap","pe","pbv","div_yield"):
+                    s[k] = fund.get(k)
+        except Exception:
+            pass
+
+    callback(total, total, "คำนวณ RS Rank...")
+    stocks     = rank_rs(stocks)
+    industries = summarize_groups(stocks, "industry")
+    sectors    = summarize_groups(stocks, "sector")
+
+    output = {
+        "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "total":      len(stocks),
+        "stocks":     stocks,
+        "industries": industries,
+        "sectors":    sectors,
+    }
+    out_path = os.path.join(base_dir, OUT_FILE)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(sanitize(output), f, ensure_ascii=False, indent=2)
+
+    callback(total, total,
+             f"Quick Update เสร็จ! {len(stocks)} หุ้น (ดาวน์โหลดใหม่ {len(new_data)} หุ้น)")
+
+
+# ============================================================
+# 7. Standalone (python set_data_fetcher.py)
 # ============================================================
 
 def main():
