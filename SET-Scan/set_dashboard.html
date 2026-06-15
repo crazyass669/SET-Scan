@@ -1,0 +1,2698 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SET Dashboard</title>
+<style>
+  :root {
+    --bg:       #0d1117;
+    --bg2:      #161b22;
+    --bg3:      #21262d;
+    --border:   #30363d;
+    --text:     #e6edf3;
+    --text2:    #8b949e;
+    --green:    #3fb950;
+    --green2:   #1a4a23;
+    --red:      #f85149;
+    --red2:     #4a1a1a;
+    --yellow:   #d29922;
+    --blue:     #58a6ff;
+    --purple:   #bc8cff;
+    --accent:   #1f6feb;
+    --font:     'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 13px; }
+
+  /* NAV */
+  nav {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 44px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .nav-brand { font-weight: 700; font-size: 14px; color: var(--text); margin-right: 16px; letter-spacing: .5px; }
+  .nav-brand span { color: var(--blue); }
+  .nav-btn {
+    background: none; border: none; color: var(--text2); cursor: pointer;
+    padding: 6px 12px; border-radius: 6px; font-size: 12px; font-family: var(--font);
+    transition: all .15s;
+  }
+  .nav-btn:hover { background: var(--bg3); color: var(--text); }
+  .nav-btn.active { background: var(--accent); color: #fff; }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  #updated-at { font-size: 11px; color: var(--text2); }
+  .refresh-btn {
+    background: var(--bg3); border: 1px solid var(--border); color: var(--text2);
+    padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px;
+    font-family: var(--font);
+  }
+  .refresh-btn:hover { color: var(--text); }
+
+  /* PAGES */
+  .page { display: none; padding: 20px; max-width: 1400px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* GRID HELPERS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+
+  /* CARD */
+  .card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px;
+  }
+  .card-title {
+    font-size: 11px; font-weight: 600; color: var(--text2);
+    text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px;
+  }
+
+  /* STAT BOX */
+  .stat-val { font-size: 28px; font-weight: 700; line-height: 1; }
+  .stat-label { font-size: 11px; color: var(--text2); margin-top: 4px; }
+  .stat-sub { font-size: 12px; color: var(--text2); margin-top: 6px; }
+
+  /* COLORS */
+  .green { color: var(--green); }
+  .red   { color: var(--red); }
+  .yellow{ color: var(--yellow); }
+  .blue  { color: var(--blue); }
+  .text2 { color: var(--text2); }
+
+  /* BADGE */
+  .badge {
+    display: inline-block; font-size: 10px; font-weight: 600;
+    padding: 2px 7px; border-radius: 4px; letter-spacing: .03em;
+  }
+  .badge-green  { background: var(--green2); color: var(--green); }
+  .badge-red    { background: var(--red2);   color: var(--red); }
+  .badge-yellow { background: #3d2e00; color: var(--yellow); }
+  .badge-blue   { background: #0d2847; color: var(--blue); }
+
+  /* BREADTH BAR */
+  .breadth-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .breadth-label { width: 70px; font-size: 12px; color: var(--text2); }
+  .breadth-track { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .breadth-fill  { height: 100%; border-radius: 3px; transition: width .4s; }
+  .breadth-pct   { width: 40px; text-align: right; font-size: 12px; font-weight: 600; }
+
+  /* TABLE */
+  .tbl { width: 100%; border-collapse: collapse; }
+  .tbl th {
+    font-size: 10px; font-weight: 600; color: var(--text2);
+    text-transform: uppercase; letter-spacing: .05em;
+    padding: 6px 8px; border-bottom: 1px solid var(--border);
+    text-align: left; white-space: nowrap;
+  }
+  .tbl th.r, .tbl td.r { text-align: right; }
+  .tbl td { padding: 6px 8px; border-bottom: 1px solid #1c2128; font-size: 12px; }
+  .tbl tr:hover td { background: var(--bg3); }
+  .tbl tr:last-child td { border-bottom: none; }
+
+  /* SECTOR BAR */
+  .sec-bar-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid #1c2128; }
+  .sec-bar-row:last-child { border-bottom: none; }
+  .sec-name { width: 220px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sec-track { flex: 1; height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; position: relative; }
+  .sec-fill-pos { height: 100%; background: var(--green); border-radius: 3px; }
+  .sec-fill-neg { height: 100%; background: var(--red);   border-radius: 3px; }
+  .sec-val { width: 60px; text-align: right; font-size: 12px; font-weight: 600; }
+  .sec-rs  { width: 36px; text-align: right; font-size: 11px; color: var(--text2); }
+
+  /* RS DISTRIBUTION */
+  .rs-dist { display: flex; gap: 3px; align-items: flex-end; height: 60px; margin-bottom: 8px; }
+  .rs-bar { flex: 1; border-radius: 3px 3px 0 0; transition: height .4s; min-height: 4px; }
+  .rs-labels { display: flex; gap: 3px; }
+  .rs-lbl { flex: 1; font-size: 9px; color: var(--text2); text-align: center; }
+
+  /* SEARCH */
+  .search-box {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 12px; border-radius: 6px; font-size: 13px;
+    font-family: var(--font); outline: none; margin-bottom: 12px;
+  }
+  .search-box:focus { border-color: var(--accent); }
+
+  /* FILTER ROW */
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .filter-btn {
+    background: var(--bg3); border: 1px solid var(--border); color: var(--text2);
+    padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 11px;
+    font-family: var(--font); transition: all .15s;
+  }
+  .filter-btn:hover, .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* SORT HEADER */
+  .tbl th.sortable { cursor: pointer; user-select: none; }
+  .tbl th.sortable:hover { color: var(--text); }
+
+  /* ROTATION MAP */
+  .rotation-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+    border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+  }
+  .rot-quad {
+    padding: 14px; min-height: 200px; position: relative;
+  }
+  .rot-quad.leading    { background: #0d2015; }
+  .rot-quad.improving  { background: #0d1a2a; }
+  .rot-quad.weakening  { background: #2a1a0d; }
+  .rot-quad.lagging    { background: #1a0d0d; }
+  .rot-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .08em; margin-bottom: 10px; opacity: .6;
+  }
+  .rot-item {
+    display: inline-block; padding: 3px 8px; border-radius: 4px;
+    font-size: 11px; margin: 2px; cursor: default;
+  }
+  .rot-axis-x { text-align: center; font-size: 10px; color: var(--text2); margin-top: 6px; }
+  .rot-axis-y { writing-mode: vertical-rl; text-align: center; font-size: 10px; color: var(--text2); margin-right: 6px; }
+  .rot-chip { display:inline-flex; align-items:center; gap:5px; padding:3px 8px 3px 5px; border-radius:5px; font-size:11px; cursor:pointer; border:1px solid transparent; transition:opacity .15s,border-color .15s; user-select:none; }
+  .rot-chip:hover { opacity:1 !important; border-color:rgba(255,255,255,0.25); }
+  .rot-chip.pinned { border-color:rgba(255,255,255,0.55); background:rgba(255,255,255,0.07); }
+  .rot-chip-sq { width:9px; height:9px; border-radius:2px; flex-shrink:0; }
+
+  /* MINI SPARKLINE */
+  .spark { display: inline-block; width: 60px; height: 24px; vertical-align: middle; }
+  .spark-canvas { display: block; }
+
+  /* PAGE TITLE */
+  .page-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .page-sub   { font-size: 12px; color: var(--text2); margin-bottom: 20px; }
+
+  /* SECTION TITLE */
+  .sec-title { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin: 20px 0 10px; }
+
+  /* WATCHLIST INPUT */
+  .wl-input-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .wl-input { flex: 1; background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 6px; font-size: 13px; font-family: var(--font); outline: none; }
+  .wl-input:focus { border-color: var(--accent); }
+  .wl-add-btn { background: var(--accent); border: none; color: #fff; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-family: var(--font); font-size: 13px; }
+  .wl-del-btn { background: none; border: none; color: var(--red); cursor: pointer; font-size: 14px; padding: 0 4px; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; color: var(--text2); padding: 40px; font-size: 13px; }
+
+  /* SECTOR DETAIL MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.75); z-index: 200;
+    align-items: flex-start; justify-content: center; padding-top: 60px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; width: 92%; max-width: 920px;
+    max-height: 82vh; display: flex; flex-direction: column;
+  }
+  .modal-header {
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .modal-title { font-size: 15px; font-weight: 700; flex: 1; }
+  .modal-abbr { font-size: 11px; font-weight: 700; color: var(--blue); background: #0d2847; padding: 3px 8px; border-radius: 4px; }
+  .modal-close { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 20px; line-height: 1; padding: 0 4px; }
+  .modal-close:hover { color: var(--text); }
+  .modal-stats { display: flex; gap: 20px; padding: 10px 20px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .modal-stat { text-align: center; min-width: 65px; }
+  .modal-stat-val { font-size: 14px; font-weight: 700; }
+  .modal-stat-lbl { font-size: 10px; color: var(--text2); margin-top: 2px; }
+  .modal-body { overflow-y: auto; }
+  .tbl-clickable tbody tr { cursor: default; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  }
+
+  /* SCREENER */
+  .tbl th.sortable { cursor:pointer; user-select:none; white-space:nowrap; }
+  .tbl th.sortable:hover { color:#fff; background:rgba(255,255,255,0.04); }
+  .sort-ind { margin-left:3px; font-size:9px; opacity:0.35; }
+  .sort-ind.on { opacity:1; color:#58a6ff; }
+  .scr-input {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 12px;
+    font-family: var(--font); outline: none;
+  }
+  .scr-input:focus { border-color: var(--accent); }
+  .scr-label { font-size: 10px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; display: flex; align-items: center; gap: 4px; }
+  .scr-group { display: flex; flex-direction: column; gap: 4px; }
+  .scr-tip-icon { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border-radius: 50%; background: var(--border); color: var(--text2); font-size: 9px; font-weight: 700; cursor: default; flex-shrink: 0; position: relative; }
+  .scr-tip-icon:hover .scr-tip-box { display: block; }
+  .scr-tip-box { display: none; position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: #1c2333; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; width: 220px; font-size: 11px; color: var(--text); line-height: 1.5; z-index: 9999; white-space: normal; text-transform: none; letter-spacing: 0; font-weight: 400; box-shadow: 0 4px 16px rgba(0,0,0,.5); }
+  .scr-tip-box::after { content: ''; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-bottom-color: var(--border); }
+  .scr-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 12px; }
+  .scr-check-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+  .scr-check { display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; }
+  .scr-actions { display: flex; gap: 8px; }
+  .btn-primary { background: var(--accent); border: none; color: #fff; padding: 7px 20px; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: var(--font); }
+  .btn-secondary { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); padding: 7px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: var(--font); }
+
+  /* HEATMAP */
+  .hm-cell {
+    width: 44px; height: 26px; border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 600; cursor: default;
+    overflow: hidden; white-space: nowrap;
+  }
+
+  /* 52W RANGE BAR */
+  .range-bar-wrap { min-width: 90px; }
+  .range-bar-track { background: var(--bg3); height: 5px; border-radius: 3px; overflow: hidden; }
+  .range-bar-fill  { height: 100%; background: var(--blue); border-radius: 3px; }
+
+  /* PROGRESS OVERLAY */
+  #progress-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.8); z-index: 999;
+    align-items: center; justify-content: center;
+  }
+  #progress-modal {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 32px 40px; width: 460px; max-width: 92vw;
+    text-align: center;
+  }
+  #progress-title { font-size: 16px; font-weight: 700; margin-bottom: 24px; }
+  #progress-bar-track {
+    background: var(--bg3); border-radius: 6px; height: 10px;
+    overflow: hidden; margin-bottom: 10px;
+  }
+  #progress-bar-fill {
+    height: 100%; width: 0%; background: var(--accent);
+    border-radius: 6px; transition: width .4s ease;
+  }
+  #progress-pct { font-size: 13px; font-weight: 600; color: var(--blue); margin-bottom: 8px; }
+  #progress-msg { font-size: 12px; color: var(--text2); min-height: 18px; }
+  #progress-eta { font-size: 11px; color: var(--text2); margin-top: 6px; opacity: .7; }
+</style>
+</head>
+<body>
+
+<!-- PROGRESS OVERLAY -->
+<div id="progress-overlay">
+  <div id="progress-modal">
+    <div id="progress-title">กำลังดึงข้อมูล SET...</div>
+    <div id="progress-bar-track">
+      <div id="progress-bar-fill"></div>
+    </div>
+    <div id="progress-pct">0%</div>
+    <div id="progress-msg">กำลังเริ่ม...</div>
+    <div id="progress-eta"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">SET <span>Dashboard</span></div>
+  <button class="nav-btn active" onclick="showPage('overview')">Overview</button>
+  <button class="nav-btn" onclick="showPage('rotation')">Rotation</button>
+  <button class="nav-btn" onclick="showPage('rs-leaders')">RS 80+</button>
+  <button class="nav-btn" onclick="showPage('sectors')">Sectors</button>
+  <button class="nav-btn" onclick="showPage('stocks')">หุ้นทั้งหมด</button>
+  <button class="nav-btn" onclick="showPage('screener')">Screener</button>
+  <button class="nav-btn" onclick="showPage('52w')">52W High</button>
+  <button class="nav-btn" onclick="showPage('52w-low')">52W Low</button>
+  <button class="nav-btn" onclick="showPage('breakout')">Breakout</button>
+  <button class="nav-btn" onclick="showPage('momentum')">Momentum</button>
+  <button class="nav-btn" onclick="showPage('heatmap')">Heatmap</button>
+  <button class="nav-btn" onclick="showPage('ema-breadth')">EMA Breadth</button>
+  <button class="nav-btn" onclick="showPage('watchlist')">Watchlist</button>
+  <div class="nav-right">
+    <span id="updated-at">—</span>
+    <button class="refresh-btn" id="refresh-btn" onclick="startRefresh()">⟳ Refresh</button>
+  </div>
+</nav>
+
+<!-- PAGE: OVERVIEW -->
+<div id="page-overview" class="page active">
+  <div class="page-title">Market Overview</div>
+  <div class="page-sub">ภาพรวม SET — กด Refresh เพื่ออัปเดตข้อมูล</div>
+
+  <!-- STAT CARDS -->
+  <div class="grid-4" id="stat-cards"></div>
+
+  <div class="grid-2" style="margin-top:16px">
+    <!-- BREADTH -->
+    <div class="card">
+      <div class="card-title">Market Breadth — % Above EMA</div>
+      <div id="breadth-bars"></div>
+    </div>
+    <!-- RS DISTRIBUTION -->
+    <div class="card">
+      <div class="card-title">RS Distribution</div>
+      <div class="rs-dist" id="rs-dist-bars"></div>
+      <div class="rs-labels" id="rs-dist-labels"></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--text2)" id="rs-dist-summary"></div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:16px">
+    <!-- TOP GAINERS -->
+    <div class="card">
+      <div class="card-title">Top Gainers Today (1D)</div>
+      <table class="tbl" id="tbl-gainers"></table>
+    </div>
+    <!-- TOP LOSERS -->
+    <div class="card">
+      <div class="card-title">Top Losers Today (1D)</div>
+      <table class="tbl" id="tbl-losers"></table>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:16px">
+    <!-- INDUSTRY RANKING -->
+    <div class="card">
+      <div class="card-title">Industry Group Ranking (1M)</div>
+      <div id="industry-bars"></div>
+    </div>
+    <!-- RS LEADERS PREVIEW -->
+    <div class="card">
+      <div class="card-title">RS Leaders (Top 10)</div>
+      <table class="tbl" id="tbl-rs-preview"></table>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: ROTATION -->
+<div id="page-rotation" class="page">
+  <div class="page-title">Sector & Industry Rotation</div>
+  <div class="page-sub">แกน X = 3M Return (Trend) · แกน Y = 1M Return (Momentum)</div>
+
+  <div class="filter-row" style="margin-bottom:12px">
+    <button class="filter-btn active" onclick="setRotView('sector',this)">Sector</button>
+    <button class="filter-btn" onclick="setRotView('industry',this)">Industry Group</button>
+  </div>
+
+  <!-- Rotation Map — เต็มความกว้าง -->
+  <div class="card">
+    <canvas id="rotation-map" style="width:100%;height:520px;cursor:crosshair;display:block"></canvas>
+    <div style="display:flex;gap:14px;margin-top:10px;flex-wrap:wrap" id="rot-legend"></div>
+  </div>
+
+  <!-- Sector Ranking + Leadership/Damage -->
+  <div class="grid-2" style="margin-top:16px">
+    <div class="card">
+      <div class="card-title">Sector Ranking (1M)</div>
+      <div id="rotation-bars"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Leadership Board vs Damage Board (1M)</div>
+      <div class="grid-2" style="margin-top:8px">
+        <div>
+          <div style="font-size:11px;color:var(--green);margin-bottom:8px;font-weight:600">▲ LEADERS</div>
+          <table class="tbl" id="tbl-leaders"></table>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--red);margin-bottom:8px;font-weight:600">▼ DAMAGE</div>
+          <table class="tbl" id="tbl-damage"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: RS LEADERS -->
+<div id="page-rs-leaders" class="page">
+  <div class="page-title">RS 80+ Leaders</div>
+  <div class="page-sub">หุ้นที่มี Relative Strength Score ≥ 80 — แข็งแกร่งกว่า 80% ของตลาด</div>
+
+  <div class="grid-4" id="rs-stat-cards" style="margin-bottom:16px"></div>
+
+  <div class="card">
+    <div class="filter-row" id="rs-sector-filters"></div>
+    <table class="tbl" id="tbl-rs-leaders">
+      <thead><tr>
+        <th>RS</th><th>Symbol</th><th>ชื่อ</th><th>Sector</th>
+        <th class="r">ราคา</th><th class="r">1D%</th><th class="r">1W%</th>
+        <th class="r">1M%</th><th class="r">3M%</th><th class="r">YTD%</th>
+        <th class="r">EMA50</th><th class="r">EMA200</th>
+      </tr></thead>
+      <tbody id="rs-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE: SECTORS -->
+<div id="page-sectors" class="page">
+  <div class="page-title">Sectors & Industries</div>
+  <div class="page-sub">ผลตอบแทนและ RS เฉลี่ยแต่ละหมวดธุรกิจ</div>
+
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="setSectorView('sector',this)">Sector (28)</button>
+    <button class="filter-btn" onclick="setSectorView('industry',this)">Industry Group (9)</button>
+  </div>
+
+  <div class="card">
+    <table class="tbl" id="tbl-sectors">
+      <thead><tr>
+        <th>อันดับ</th><th>ชื่อ</th><th class="r">จำนวน</th>
+        <th class="r sortable" onclick="sortSectors('ret_1d')">1D%</th>
+        <th class="r sortable" onclick="sortSectors('ret_1w')">1W%</th>
+        <th class="r sortable" onclick="sortSectors('ret_1m')">1M%</th>
+        <th class="r sortable" onclick="sortSectors('ret_3m')">3M%</th>
+        <th class="r sortable" onclick="sortSectors('ret_1y')">1Y%</th>
+        <th class="r sortable" onclick="sortSectors('avg_rs')">Avg RS</th>
+        <th class="r">% &gt;EMA50</th>
+        <th class="r sortable" onclick="sortSectors('newHighPct')">New High</th>
+        <th class="r sortable" onclick="sortSectors('avg_pe')">P/E</th>
+        <th class="r sortable" onclick="sortSectors('avg_pbv')">P/BV</th>
+        <th class="r sortable" onclick="sortSectors('avg_div_yield')">Div%</th>
+      </tr></thead>
+      <tbody id="sectors-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE: STOCKS -->
+<div id="page-stocks" class="page">
+  <div class="page-title">หุ้นทั้งหมด</div>
+  <div class="page-sub" id="stocks-count"></div>
+
+  <input class="search-box" id="stock-search" placeholder="ค้นหา Symbol หรือชื่อบริษัท..." oninput="filterStocks()">
+
+  <div style="font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Industry</div>
+  <div class="filter-row" id="industry-filter-btns"></div>
+
+  <div style="font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;margin-top:4px">Sector</div>
+  <div class="filter-row" id="sector-filter-btns"></div>
+
+  <div class="card">
+    <table class="tbl" id="tbl-stocks">
+      <thead><tr>
+        <th class="r sortable" id="sh-rs"   onclick="sortStocks('rs_score')">RS ↕</th>
+        <th>Symbol</th><th>ชื่อ</th><th>Industry</th><th>Sector</th>
+        <th class="r sortable" id="sh-px"   onclick="sortStocks('price')">ราคา ↕</th>
+        <th class="r sortable" id="sh-1d"   onclick="sortStocks('ret_1d')">1D% ↕</th>
+        <th class="r sortable" id="sh-1w"   onclick="sortStocks('ret_1w')">1W% ↕</th>
+        <th class="r sortable" id="sh-1m"   onclick="sortStocks('ret_1m')">1M% ↕</th>
+        <th class="r sortable" id="sh-3m"   onclick="sortStocks('ret_3m')">3M% ↕</th>
+        <th class="r sortable" id="sh-ytd"  onclick="sortStocks('ret_ytd')">YTD% ↕</th>
+        <th class="r">Trend</th>
+        <th class="r sortable" id="sh-cap"  onclick="sortStocks('mkt_cap')">MKT CAP ↕</th>
+        <th class="r sortable" id="sh-vol"  onclick="sortStocks('vol_avg20')">Volume ↕</th>
+        <th class="r sortable" id="sh-e50"  onclick="sortStocks('above_ema50_n')">EMA50 ↕</th>
+        <th class="r sortable" id="sh-e200" onclick="sortStocks('above_ema200_n')">EMA200 ↕</th>
+      </tr></thead>
+      <tbody id="stocks-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE: WATCHLIST -->
+<div id="page-watchlist" class="page">
+  <div class="page-title">Watchlist</div>
+  <div class="page-sub">หุ้นที่สนใจ — บันทึกไว้ใน browser</div>
+
+  <div class="wl-input-row">
+    <input class="wl-input" id="wl-input" placeholder="พิมพ์ Symbol เช่น PTT, KBANK, AOT..." onkeydown="if(event.key==='Enter')addToWatchlist()">
+    <button class="wl-add-btn" onclick="addToWatchlist()">+ เพิ่ม</button>
+  </div>
+
+  <div class="card">
+    <table class="tbl" id="tbl-watchlist">
+      <thead><tr>
+        <th>RS</th><th>Symbol</th><th>ชื่อ</th><th>Sector</th>
+        <th class="r">ราคา</th>
+        <th class="r">1D%</th><th class="r">1W%</th><th class="r">1M%</th><th class="r">3M%</th>
+        <th class="r">YTD%</th><th class="r">1Y%</th>
+        <th class="r">Chart</th>
+        <th class="r">MKT CAP</th>
+        <th class="r">EMA50</th><th class="r">EMA200</th>
+        <th></th>
+      </tr></thead>
+      <tbody id="wl-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE: BREAKOUT RADAR -->
+<div id="page-breakout" class="page">
+  <div class="page-title">Breakout Radar
+    <span class="scr-tip-icon" style="font-size:11px;width:17px;height:17px;margin-left:8px;vertical-align:middle">?<div class="scr-tip-box" style="width:260px">
+      <strong>Breakout Radar คืออะไร?</strong><br>
+      คัดกรองหุ้นที่มีคุณสมบัติครบ 3 อย่างพร้อมกัน:<br><br>
+      <span style="color:#58a6ff">① RS สูง</span> — แข็งแกร่งกว่าตลาด<br>
+      <span style="color:#3fb950">② ใกล้ 52W High</span> — ราคาอยู่ใกล้จุดสูงสุด พร้อม breakout<br>
+      <span style="color:#ffa657">③ เหนือ EMA</span> — อยู่ใน uptrend<br><br>
+      นี่คือ setup ที่ William O'Neil (CAN SLIM) และ growth investor ใช้ค้นหาหุ้นที่มีโอกาส breakout ต่อ
+    </div></span>
+  </div>
+  <div class="page-sub">RS สูง · ใกล้ 52W High · เหนือ EMA — Classic Growth Setup</div>
+  <div class="filter-row" style="margin-bottom:8px">
+    <span style="font-size:11px;color:var(--text2);align-self:center;display:flex;align-items:center;gap:4px">
+      RS ≥
+      <span class="scr-tip-icon">?<div class="scr-tip-box">
+        <strong>RS Score (Relative Strength)</strong><br>
+        วัดความแข็งแกร่งของหุ้นเทียบกับตลาดทั้งหมด (0–99)<br><br>
+        คำนวณจาก weighted return: 1M×2 + 3M×1 + 6M×1 + 1Y×1 แล้ว rank เป็น percentile<br><br>
+        <span style="color:#3fb950">≥ 90</span> = Top 10% ของตลาด<br>
+        <span style="color:#58a6ff">≥ 80</span> = Top 20% — แนะนำขั้นต่ำสำหรับ Breakout<br>
+        <span style="color:#e3b341">≥ 70</span> = Top 30%
+      </div></span>
+    </span>
+    <button class="filter-btn active" id="bo-rs-70" onclick="setBO('rs',70,this)">70</button>
+    <button class="filter-btn" id="bo-rs-80" onclick="setBO('rs',80,this)">80</button>
+    <button class="filter-btn" id="bo-rs-90" onclick="setBO('rs',90,this)">90</button>
+    <span style="margin-left:16px;font-size:11px;color:var(--text2);align-self:center;display:flex;align-items:center;gap:4px">
+      ห่าง High ≤
+      <span class="scr-tip-icon">?<div class="scr-tip-box">
+        <strong>% ห่างจาก 52W High</strong><br>
+        ราคาปัจจุบันห่างจากจุดสูงสุดใน 52 สัปดาห์กี่ %<br><br>
+        <span style="color:#3fb950">5%</span> = ใกล้ breakout มาก (High Tight)<br>
+        <span style="color:#e3b341">10%</span> = อยู่ในโซน consolidation ใกล้จุดสูง<br>
+        <span style="color:#8b949e">20%</span> = กว้างขึ้น รวมหุ้นที่ pull back แล้ว<br><br>
+        "NEW HIGH" = ทำราคาสูงสุดใหม่วันนี้
+      </div></span>
+    </span>
+    <button class="filter-btn active" id="bo-d-10" onclick="setBO('dist',10,this)">10%</button>
+    <button class="filter-btn" id="bo-d-5" onclick="setBO('dist',5,this)">5%</button>
+    <button class="filter-btn" id="bo-d-20" onclick="setBO('dist',20,this)">20%</button>
+    <span style="margin-left:16px;font-size:11px;color:var(--text2);align-self:center;display:flex;align-items:center;gap:4px">
+      EMA
+      <span class="scr-tip-icon">?<div class="scr-tip-box">
+        <strong>EMA Filter</strong><br>
+        กรองหุ้นที่ราคาอยู่เหนือ Exponential Moving Average<br><br>
+        <strong>EMA50</strong> = ราคา &gt; EMA 50 วัน<br>
+        แนวโน้มระยะกลางเป็นขาขึ้น (ประมาณ 2.5 เดือน)<br><br>
+        <strong>EMA50+200</strong> = ราคา &gt; EMA50 <em>และ</em> &gt; EMA200<br>
+        ยืนยันขาขึ้นทั้งระยะกลางและระยะยาว — setup แข็งแกร่งที่สุด<br><br>
+        <strong>ไม่กรอง</strong> = ไม่สนใจ EMA เลย
+      </div></span>
+    </span>
+    <button class="filter-btn active" id="bo-ema-50" onclick="setBO('ema','50',this)">EMA50</button>
+    <button class="filter-btn" id="bo-ema-200" onclick="setBO('ema','200',this)">EMA50+200</button>
+    <button class="filter-btn" id="bo-ema-any" onclick="setBO('ema','any',this)">ไม่กรอง</button>
+  </div>
+  <div class="card">
+    <div id="bo-count" style="font-size:11px;color:var(--text2);margin-bottom:8px"></div>
+    <table class="tbl">
+      <thead id="bo-thead"></thead>
+      <tbody id="bo-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE: MOMENTUM ALIGNMENT -->
+<div id="page-momentum" class="page">
+  <div class="page-title">Momentum Alignment
+    <span class="scr-tip-icon" style="font-size:11px;width:17px;height:17px;margin-left:8px;vertical-align:middle">?<div class="scr-tip-box" style="width:260px">
+      <strong>Momentum Alignment คืออะไร?</strong><br>
+      คัดกรองหุ้นที่ผลตอบแทนเป็น<strong>บวกพร้อมกันหลาย Timeframe</strong><br><br>
+      เมื่อหุ้นขึ้นทั้ง 1D, 1W, 1M, 3M พร้อมกัน แสดงว่า momentum แข็งแกร่งทุกระดับ — ทั้งรายวัน รายสัปดาห์ รายเดือน และรายไตรมาส<br><br>
+      หุ้นเหล่านี้มักเป็นผู้นำตลาดในช่วงขาขึ้น และมีโอกาสสูงที่จะยังคงวิ่งต่อ
+    </div></span>
+  </div>
+  <div class="page-sub">หุ้นที่ momentum เป็นบวกทุก Timeframe — setup ที่แข็งแกร่งที่สุด</div>
+  <div class="filter-row" style="margin-bottom:8px">
+    <button class="filter-btn active" onclick="setMomFilter('all4',this)">ทุก TF (1D·1W·1M·3M)
+    </button>
+    <span class="scr-tip-icon">?<div class="scr-tip-box">
+      <strong>ทุก Timeframe (1D·1W·1M·3M)</strong><br>
+      กรองเฉพาะหุ้นที่ return เป็นบวก<strong>ครบทุกช่วงเวลา</strong>:<br><br>
+      1D &gt; 0% · 1W &gt; 0% · 1M &gt; 0% · 3M &gt; 0%<br><br>
+      เงื่อนไขเข้มที่สุด — หุ้นที่ผ่านมักเป็น momentum leader ที่แท้จริง จำนวนน้อยแต่คุณภาพสูง
+    </div></span>
+    <button class="filter-btn" onclick="setMomFilter('3tf',this)">1W·1M·3M</button>
+    <span class="scr-tip-icon">?<div class="scr-tip-box">
+      <strong>3 Timeframe (1W·1M·3M)</strong><br>
+      ตัดเงื่อนไข 1D ออก เน้นแนวโน้มระยะกลาง-ยาว<br><br>
+      1W &gt; 0% · 1M &gt; 0% · 3M &gt; 0%<br><br>
+      เหมาะเมื่อตลาดโดยรวมลงในวันนั้น แต่หุ้นยังมี trend ระยะกลางเป็นบวก ได้จำนวนหุ้นมากขึ้น
+    </div></span>
+    <button class="filter-btn" onclick="setMomFilter('2tf',this)">1M·3M</button>
+    <span class="scr-tip-icon">?<div class="scr-tip-box">
+      <strong>2 Timeframe (1M·3M)</strong><br>
+      กรองเฉพาะ momentum ระยะกลาง-ยาว<br><br>
+      1M &gt; 0% · 3M &gt; 0%<br><br>
+      เงื่อนไขผ่อนคลายที่สุด ได้หุ้นมากที่สุด เหมาะสำหรับดู universe ที่กว้างขึ้น แต่ยังคัดหุ้นที่มีแนวโน้มดีออกจากหุ้นขาลง
+    </div></span>
+  </div>
+  <div class="card">
+    <div id="mom-count" style="font-size:11px;color:var(--text2);margin-bottom:8px"></div>
+    <table class="tbl">
+      <thead id="mom-thead"></thead>
+      <tbody id="mom-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE: SCREENER -->
+<div id="page-screener" class="page">
+  <div class="page-title">Stock Screener</div>
+  <div class="page-sub">กำหนดเงื่อนไขค้นหาหุ้นตาม setup ที่ต้องการ</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    <button class="filter-btn" onclick="applyPreset('high_yield_rs')" title="Div Yield สูง + RS แข็ง">High Yield + RS</button>
+    <button class="filter-btn" onclick="applyPreset('low_pbv_reversal')" title="P/BV ต่ำ + RS เริ่มกลับตัว">Low PBV + กลับตัว</button>
+    <button class="filter-btn" onclick="applyPreset('clear')" style="color:var(--text2)">ล้างทั้งหมด</button>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="scr-row">
+      <div class="scr-group">
+        <div class="scr-label">RS Score ≥
+          <span class="scr-tip-icon">?<div class="scr-tip-box">
+            <strong>RS Score (0–99)</strong><br>
+            วัดความแข็งแกร่งเทียบกับตลาด คำนวณจาก % return ของ 1M×2, 3M×1, 6M×1, 1Y×1 แล้ว rank เป็น percentile<br><br>
+            ≥ 80 = แข็งแกร่งมาก (Top 20%)<br>
+            ≥ 50 = แข็งแกร่งกว่าครึ่งตลาด
+          </div></span>
+        </div>
+        <input class="scr-input" id="scr-rs-min" type="number" placeholder="0" min="0" max="99">
+      </div>
+      <div class="scr-group">
+        <div class="scr-label">1M% ≥
+          <span class="scr-tip-icon">?<div class="scr-tip-box">
+            <strong>ผลตอบแทน 1 เดือน</strong><br>
+            % เปลี่ยนแปลงราคาย้อนหลัง 1 เดือน (ประมาณ 21 วันทำการ)<br><br>
+            เช่น ใส่ 5 = กรองเฉพาะหุ้นที่ขึ้น ≥ 5% ใน 1 เดือน
+          </div></span>
+        </div>
+        <input class="scr-input" id="scr-1m" type="number" placeholder="เช่น 5">
+      </div>
+      <div class="scr-group">
+        <div class="scr-label">3M% ≥
+          <span class="scr-tip-icon">?<div class="scr-tip-box">
+            <strong>ผลตอบแทน 3 เดือน</strong><br>
+            % เปลี่ยนแปลงราคาย้อนหลัง 3 เดือน (ประมาณ 63 วันทำการ)<br><br>
+            เช่น ใส่ 10 = กรองเฉพาะหุ้นที่ขึ้น ≥ 10% ใน 3 เดือน
+          </div></span>
+        </div>
+        <input class="scr-input" id="scr-3m" type="number" placeholder="เช่น 10">
+      </div>
+      <div class="scr-group">
+        <div class="scr-label">1D% ≥
+          <span class="scr-tip-icon">?<div class="scr-tip-box">
+            <strong>ผลตอบแทนวันนี้</strong><br>
+            % เปลี่ยนแปลงราคาของวันล่าสุด เทียบกับวันก่อนหน้า<br><br>
+            เช่น ใส่ 2 = หุ้นที่ขึ้น ≥ 2% วันนี้<br>
+            ใส่ -3 = หุ้นที่ลง ≥ 3% (มีค่าติดลบ)
+          </div></span>
+        </div>
+        <input class="scr-input" id="scr-1d" type="number" placeholder="เช่น 1">
+      </div>
+      <div class="scr-group">
+        <div class="scr-label">YTD% ≥
+          <span class="scr-tip-icon">?<div class="scr-tip-box">
+            <strong>ผลตอบแทนตั้งแต่ต้นปี</strong><br>
+            % เปลี่ยนแปลงราคาตั้งแต่ต้นปี (1 ม.ค.) จนถึงวันปัจจุบัน<br><br>
+            เช่น ใส่ 20 = หุ้นที่ขึ้น ≥ 20% ตั้งแต่ต้นปี
+          </div></span>
+        </div>
+        <input class="scr-input" id="scr-ytd" type="number" placeholder="เช่น 20">
+      </div>
+      <div class="scr-group">
+        <div class="scr-label">MKT CAP ≥ (B)
+          <span class="scr-tip-icon">?<div class="scr-tip-box">
+            <strong>Market Capitalization (พันล้านบาท)</strong><br>
+            มูลค่าตลาดรวมของบริษัท = ราคา × จำนวนหุ้น<br><br>
+            เช่น ใส่ 1 = กรองเฉพาะหุ้นที่มี Market Cap ≥ 1 พันล้านบาท<br>
+            ใส่ 100 = Large Cap ขึ้นไป
+          </div></span>
+        </div>
+        <input class="scr-input" id="scr-cap" type="number" placeholder="เช่น 1">
+      </div>
+      <div class="scr-group">
+        <div class="scr-label">ราคา ≥
+          <span class="scr-tip-icon">?<div class="scr-tip-box">
+            <strong>ราคาขั้นต่ำ (บาท)</strong><br>
+            กรองหุ้นที่มีราคาปิดล่าสุดสูงกว่าค่าที่กำหนด<br><br>
+            เช่น ใส่ 5 = ตัดหุ้นราคาต่ำกว่า 5 บาทออก (penny stocks)
+          </div></span>
+        </div>
+        <input class="scr-input" id="scr-price-min" type="number" placeholder="เช่น 1">
+      </div>
+      <div class="scr-group">
+        <div class="scr-label">ราคา ≤
+          <span class="scr-tip-icon">?<div class="scr-tip-box">
+            <strong>ราคาสูงสุด (บาท)</strong><br>
+            กรองหุ้นที่มีราคาปิดล่าสุดต่ำกว่าค่าที่กำหนด<br><br>
+            เช่น ใส่ 100 = เฉพาะหุ้นราคาไม่เกิน 100 บาท
+          </div></span>
+        </div>
+        <input class="scr-input" id="scr-price-max" type="number" placeholder="เช่น 500">
+      </div>
+      <div class="scr-group">
+        <div class="scr-label">ห่าง High ≤ (%)
+          <span class="scr-tip-icon">?<div class="scr-tip-box">
+            <strong>% ห่างจาก 52W High</strong><br>
+            กรองหุ้นที่ราคาอยู่ใกล้จุดสูงสุด 52 สัปดาห์<br><br>
+            เช่น ใส่ 5 = ราคาอยู่ภายใน 5% จาก 52W High (High Tight Zone)<br>
+            เช่น ใส่ 10 = รวม Consolidation Zone
+          </div></span>
+        </div>
+        <input class="scr-input" id="scr-from-high" type="number" placeholder="เช่น 10" min="0">
+      </div>
+      <div class="scr-group">
+        <div class="scr-label">ห่าง Low ≤ (%)
+          <span class="scr-tip-icon">?<div class="scr-tip-box">
+            <strong>% ห่างจาก 52W Low</strong><br>
+            กรองหุ้นที่ราคาอยู่ใกล้จุดต่ำสุด 52 สัปดาห์<br><br>
+            เช่น ใส่ 5 = ราคายังอยู่ใกล้ Low มาก (Reversal Zone)<br>
+            เช่น ใส่ 10 = รวมหุ้นที่เริ่ม Recovery บ้างแล้ว
+          </div></span>
+        </div>
+        <input class="scr-input" id="scr-from-low" type="number" placeholder="เช่น 10" min="0">
+      </div>
+      <div class="scr-group">
+        <div class="scr-label">P/E ≤
+          <span class="scr-tip-icon">?<div class="scr-tip-box">
+            <strong>Price-to-Earnings Ratio</strong><br>
+            ราคาหุ้น ÷ กำไรต่อหุ้น (Trailing 12M)<br><br>
+            เช่น ใส่ 15 = P/E ไม่เกิน 15 เท่า<br>
+            หุ้นที่ EPS ติดลบจะไม่มีค่า P/E
+          </div></span>
+        </div>
+        <input class="scr-input" id="scr-pe" type="number" placeholder="เช่น 15" min="0">
+      </div>
+      <div class="scr-group">
+        <div class="scr-label">P/BV ≤
+          <span class="scr-tip-icon">?<div class="scr-tip-box">
+            <strong>Price-to-Book Value Ratio</strong><br>
+            ราคาหุ้น ÷ มูลค่าทางบัญชีต่อหุ้น<br><br>
+            เช่น ใส่ 1 = ซื้อต่ำกว่า Book Value<br>
+            เช่น ใส่ 3 = รวม growth stock ที่มี P/BV ปกติ
+          </div></span>
+        </div>
+        <input class="scr-input" id="scr-pbv" type="number" placeholder="เช่น 3" min="0">
+      </div>
+      <div class="scr-group">
+        <div class="scr-label">Div Yield ≥ (%)
+          <span class="scr-tip-icon">?<div class="scr-tip-box">
+            <strong>Dividend Yield (%)</strong><br>
+            เงินปันผลต่อปี ÷ ราคาหุ้น × 100<br><br>
+            เช่น ใส่ 3 = หุ้นที่ให้ปันผล ≥ 3% ต่อปี<br>
+            เช่น ใส่ 5 = High Dividend สำหรับ Income Portfolio
+          </div></span>
+        </div>
+        <input class="scr-input" id="scr-dy" type="number" placeholder="เช่น 3" min="0">
+      </div>
+    </div>
+    <div class="scr-check-row">
+      <label class="scr-check"><input type="checkbox" id="scr-ema20"> Above EMA20
+        <span class="scr-tip-icon" style="margin-left:2px">?<div class="scr-tip-box">
+          <strong>Above EMA 20</strong><br>
+          ราคาปัจจุบันอยู่เหนือ Exponential Moving Average 20 วัน<br><br>
+          EMA20 = แนวโน้มระยะสั้น (ประมาณ 1 เดือน) ใช้จับ momentum ช่วงสั้น
+        </div></span>
+      </label>
+      <label class="scr-check"><input type="checkbox" id="scr-ema50"> Above EMA50
+        <span class="scr-tip-icon" style="margin-left:2px">?<div class="scr-tip-box">
+          <strong>Above EMA 50</strong><br>
+          ราคาปัจจุบันอยู่เหนือ Exponential Moving Average 50 วัน<br><br>
+          EMA50 = แนวโน้มระยะกลาง (ประมาณ 2.5 เดือน) สัญญาณแนวโน้มขาขึ้น
+        </div></span>
+      </label>
+      <label class="scr-check"><input type="checkbox" id="scr-ema200"> Above EMA200
+        <span class="scr-tip-icon" style="margin-left:2px">?<div class="scr-tip-box">
+          <strong>Above EMA 200</strong><br>
+          ราคาปัจจุบันอยู่เหนือ Exponential Moving Average 200 วัน<br><br>
+          EMA200 = แนวโน้มระยะยาว (ประมาณ 10 เดือน) หุ้นที่อยู่เหนือ EMA200 ถือว่าอยู่ใน Bull Market
+        </div></span>
+      </label>
+      <label class="scr-check" style="margin-left:12px">
+        <span style="color:var(--text2);font-size:11px">ตลาด:</span>
+        <select class="scr-input" id="scr-market" style="width:auto;padding:4px 8px">
+          <option value="ALL">ทั้งหมด</option>
+          <option value="SET">SET</option>
+          <option value="mai">mai</option>
+        </select>
+      </label>
+    </div>
+    <div class="scr-actions">
+      <button class="btn-primary" onclick="runScreener()">ค้นหา</button>
+      <button class="btn-secondary" onclick="resetScreener()">รีเซ็ต</button>
+      <span id="screener-count" style="font-size:12px;color:var(--text2);margin-left:8px;align-self:center"></span>
+    </div>
+  </div>
+  <div id="screener-results"><div class="empty">กำหนดเงื่อนไขแล้วกด ค้นหา</div></div>
+</div>
+
+<!-- PAGE: 52W HIGH -->
+<div id="page-52w" class="page">
+  <div class="page-title">52-Week High Watch</div>
+  <div class="page-sub">หุ้นที่ราคาใกล้จุดสูงสุด 52 สัปดาห์ — Breakout Candidates</div>
+  <div class="filter-row" style="margin-bottom:8px">
+    <button class="filter-btn active" onclick="set52WFilter(5,this)">Top 5%</button>
+    <button class="filter-btn" onclick="set52WFilter(10,this)">Top 10%</button>
+    <button class="filter-btn" onclick="set52WFilter(20,this)">Top 20%</button>
+    <button class="filter-btn" onclick="set52WFilter(100,this)">ทั้งหมด</button>
+    <span style="margin-left:16px;font-size:11px;color:var(--text2);align-self:center">เรียงโดย:</span>
+    <button class="filter-btn active" id="52w-sort-high" onclick="set52WSort('fromHigh',this)">% จาก High</button>
+    <button class="filter-btn" id="52w-sort-rs-desc" onclick="set52WSort('rs_desc',this)">RS สูง ↑</button>
+    <button class="filter-btn" id="52w-sort-rs-asc" onclick="set52WSort('rs_asc',this)">RS ต่ำ ↓</button>
+  </div>
+  <div class="card">
+    <div id="52w-count" style="font-size:11px;color:var(--text2);margin-bottom:8px"></div>
+    <table class="tbl">
+      <thead><tr>
+        <th>RS</th><th>Symbol</th><th>ชื่อ</th><th class="r">ราคา</th>
+        <th class="r">52W High</th><th class="r">% จาก High</th>
+        <th>Range Position</th>
+        <th class="r">1M%</th><th class="r">3M%</th>
+        <th class="r">EMA50</th><th class="r">EMA200</th>
+      </tr></thead>
+      <tbody id="52w-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE: 52-WEEK LOW WATCH -->
+<div id="page-52w-low" class="page">
+  <div class="page-title">52-Week Low Watch
+    <span class="scr-tip-icon" style="font-size:11px;width:17px;height:17px;margin-left:8px;vertical-align:middle">?<div class="scr-tip-box" style="width:280px">
+      <strong>52-Week Low Watch คืออะไร?</strong><br>
+      หุ้นที่ราคาอยู่ใกล้จุดต่ำสุดใน 52 สัปดาห์ — จุดสังเกตสัญญาณกลับตัว<br><br>
+      <span style="color:#f85149">① NEW LOW</span> — ทำราคาต่ำสุดใหม่ ระวัง Catch Falling Knife<br>
+      <span style="color:#e3b341">② ใกล้ Low ≤ 5%</span> — เขตอันตราย แต่อาจมี Bounce<br>
+      <span style="color:#8b949e">③ ห่าง Low ≤ 10–20%</span> — หุ้นที่เริ่ม Recovery แล้ว<br><br>
+      <strong>สัญญาณ Turnaround เบื้องต้น:</strong><br>
+      RS เริ่มดีขึ้น + 1D% / 1W% กลับมาเป็นบวก + Range Bar เริ่มขยับขึ้น
+    </div></span>
+  </div>
+  <div class="page-sub">หุ้นใกล้จุดต่ำสุด 52 สัปดาห์ — Reversal &amp; Recovery Watch</div>
+  <div class="filter-row" style="margin-bottom:8px">
+    <span style="font-size:11px;color:var(--text2);align-self:center;display:flex;align-items:center;gap:4px">
+      ห่าง 52W Low ≤
+      <span class="scr-tip-icon">?<div class="scr-tip-box">
+        <strong>% ห่างจาก 52W Low</strong><br>
+        ราคาปัจจุบันสูงกว่าจุดต่ำสุดใน 52 สัปดาห์กี่ %<br><br>
+        <span style="color:#f85149">0–2%</span> = ใกล้ / ทำ NEW LOW<br>
+        <span style="color:#e3b341">5%</span> = ยังอยู่ในเขตอันตราย<br>
+        <span style="color:#8b949e">10–20%</span> = เริ่มฟื้นตัวขึ้นมาบ้างแล้ว
+      </div></span>
+    </span>
+    <button class="filter-btn active" onclick="set52WLFilter(5,this)">5%</button>
+    <button class="filter-btn" onclick="set52WLFilter(10,this)">10%</button>
+    <button class="filter-btn" onclick="set52WLFilter(20,this)">20%</button>
+    <button class="filter-btn" onclick="set52WLFilter(100,this)">ทั้งหมด</button>
+  </div>
+  <div class="card">
+    <div id="52wl-count" style="font-size:11px;color:var(--text2);margin-bottom:8px"></div>
+    <table class="tbl">
+      <thead id="52wl-thead"></thead>
+      <tbody id="52wl-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE: HEATMAP -->
+<div id="page-heatmap" class="page">
+  <div class="page-title">Market Heatmap</div>
+  <div class="page-sub">ทุกหุ้น จัดกลุ่มตาม Sector — เขียว = ขึ้น / แดง = ลง</div>
+  <div class="filter-row" style="margin-bottom:12px">
+    <button class="filter-btn active" onclick="setHmPeriod('ret_1d',this)">1D%</button>
+    <button class="filter-btn" onclick="setHmPeriod('ret_1w',this)">1W%</button>
+    <button class="filter-btn" onclick="setHmPeriod('ret_1m',this)">1M%</button>
+    <button class="filter-btn" onclick="setHmPeriod('ret_3m',this)">3M%</button>
+    <button class="filter-btn" onclick="setHmPeriod('ret_ytd',this)">YTD%</button>
+  </div>
+  <div id="heatmap-grid"></div>
+</div>
+
+<!-- PAGE: EMA BREADTH -->
+<div id="page-ema-breadth" class="page">
+  <div class="page-title">EMA Breadth by Sector</div>
+  <div class="page-sub">% หุ้นที่อยู่เหนือ EMA แต่ละเส้น — วัด trend strength แต่ละ sector</div>
+  <div class="filter-row" style="margin-bottom:12px">
+    <button class="filter-btn active" onclick="setEMABreadthView('sector',this)">Sector</button>
+    <button class="filter-btn" onclick="setEMABreadthView('industry',this)">Industry Group</button>
+  </div>
+  <div class="card">
+    <table class="tbl">
+      <thead><tr>
+        <th>#</th><th>ชื่อ</th><th class="r">หุ้น</th>
+        <th style="min-width:140px">% &gt; EMA20</th>
+        <th style="min-width:140px">% &gt; EMA50</th>
+        <th style="min-width:140px">% &gt; EMA200</th>
+        <th class="r">Trend Score</th>
+      </tr></thead>
+      <tbody id="ema-breadth-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let DATA = null;
+let watchlist = JSON.parse(localStorage.getItem("set_wl") || "[]");
+let stockSort = { key: "rs_score", dir: -1 };
+let sectorSort = { key: "ret_1m", dir: -1 };
+let rotView = "sector";
+let sectorView = "sector";
+let rsFilter = "ALL";
+let industryFilter = "ALL";
+let sectorFilter = "ALL";
+let stockSearch = "";
+
+// ============================================================
+// LOAD DATA — ดึงจาก Flask /api/data
+// ============================================================
+async function loadData() {
+  try {
+    const r = await fetch("/api/data?t=" + Date.now());
+    if (!r.ok) {
+      document.getElementById("updated-at").textContent = "ยังไม่มีข้อมูล — กด Refresh";
+      return;
+    }
+    DATA = await r.json();
+    DATA.stocks.forEach(s => {
+      if (!s.sector || s.sector === '-') s.sector = s.market === 'mai' ? 'MAI' : 'Unknown';
+      // คำนวณ ret_1y จาก price_history ถ้า null
+      if (s.ret_1y == null && s.price_history && s.price_history.length >= 200) {
+        const first = s.price_history[0][1];
+        if (first > 0) s.ret_1y = +((s.price - first) / first * 100).toFixed(2);
+      }
+    });
+    DATA.sectors.forEach(s => {
+      if (!s.name || s.name === '-') s.name = 'MAI';
+    });
+    // คำนวณ ret_1y เฉลี่ยของแต่ละ group ใหม่
+    ['sectors','industries'].forEach(key => {
+      const groupKey = key === 'sectors' ? 'sector' : 'industry';
+      DATA[key].forEach(g => {
+        if (g.ret_1y == null) {
+          const vals = DATA.stocks.filter(s => s[groupKey] === g.name && s.ret_1y != null).map(s => s.ret_1y);
+          g.ret_1y = vals.length ? +(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2) : null;
+        }
+      });
+    });
+    document.getElementById("updated-at").textContent = "อัปเดต: " + DATA.updated_at;
+    renderAll();
+  } catch(e) {
+    console.error("loadData error:", e);
+    document.getElementById("updated-at").textContent = "ไม่สามารถโหลดข้อมูลได้: " + e.message;
+  }
+}
+
+// ============================================================
+// REFRESH — ดึงข้อมูลใหม่พร้อม progress bar
+// ============================================================
+let _refreshStart = 0;
+
+async function startRefresh() {
+  const btn = document.getElementById("refresh-btn");
+  btn.disabled = true;
+  btn.textContent = "⟳ กำลังดึง...";
+
+  try {
+    const r = await fetch("/api/refresh", { method: "POST" });
+    if (!r.ok) {
+      const err = await r.json();
+      alert("⚠️ " + (err.error || "เกิดข้อผิดพลาด"));
+      btn.disabled = false;
+      btn.textContent = "⟳ Refresh";
+      return;
+    }
+  } catch(e) {
+    alert("❌ ไม่สามารถเชื่อมต่อ server ได้");
+    btn.disabled = false;
+    btn.textContent = "⟳ Refresh";
+    return;
+  }
+
+  _refreshStart = Date.now();
+  const overlay = document.getElementById("progress-overlay");
+  overlay.style.display = "flex";
+  document.getElementById("progress-bar-fill").style.width = "0%";
+  document.getElementById("progress-pct").textContent = "0%";
+  document.getElementById("progress-msg").textContent = "กำลังเริ่ม...";
+  document.getElementById("progress-eta").textContent = "";
+
+  const es = new EventSource("/api/progress");
+
+  es.onmessage = function(e) {
+    const s = JSON.parse(e.data);
+    const pct = s.total > 0 ? Math.min(Math.round(s.current / s.total * 100), 99) : 0;
+
+    document.getElementById("progress-bar-fill").style.width = pct + "%";
+    document.getElementById("progress-pct").textContent = pct + "%";
+    document.getElementById("progress-msg").textContent = s.message || "";
+
+    if (pct > 5 && pct < 99) {
+      const elapsed = (Date.now() - _refreshStart) / 1000;
+      const eta     = Math.round(elapsed / pct * (100 - pct));
+      const mm = Math.floor(eta / 60), ss = eta % 60;
+      document.getElementById("progress-eta").textContent =
+        "เหลืออีกประมาณ " + (mm > 0 ? mm + " นาที " : "") + ss + " วินาที";
+    }
+
+    if (s.done) {
+      es.close();
+      document.getElementById("progress-bar-fill").style.width = "100%";
+      document.getElementById("progress-pct").textContent = "100%";
+      setTimeout(function() {
+        overlay.style.display = "none";
+        btn.disabled = false;
+        btn.textContent = "⟳ Refresh";
+        if (s.error) {
+          const usedFallback = (s.message || "").includes("ข้อมูลล่าสุด");
+          if (usedFallback) {
+            alert("⚠️ ดึงข้อมูลใหม่ไม่สำเร็จ\nกำลังใช้ข้อมูลล่าสุดแทน");
+            loadData();
+          } else {
+            alert("❌ เกิดข้อผิดพลาด:\n" + s.error);
+          }
+        } else {
+          loadData();
+        }
+      }, 800);
+    }
+  };
+
+  es.onerror = function() {
+    es.close();
+    overlay.style.display = "none";
+    btn.disabled = false;
+    btn.textContent = "⟳ Refresh";
+    loadData();
+  };
+}
+
+function renderAll() {
+  renderOverview();
+  renderRotation();
+  renderRSLeaders();
+  renderSectors();
+  renderStocks();
+  renderWatchlist();
+  render52W();
+  render52WLow();
+  renderBreakout();
+  renderMomentum();
+  renderHeatmap();
+  renderEMABreadth();
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+// format market cap
+function fmtCap(v, isReit) {
+  if (!v) return isReit ? '<span class="badge badge-blue">REIT</span>' : '<span class="text2">—</span>';
+  if (v >= 1e12) return (v/1e12).toFixed(1) + 'T';
+  if (v >= 1e9)  return (v/1e9).toFixed(1)  + 'B';
+  if (v >= 1e6)  return (v/1e6).toFixed(1)  + 'M';
+  return v.toLocaleString();
+}
+
+// format volume
+function fmtVol(v) {
+  if (!v) return '<span class="text2">—</span>';
+  if (v >= 1e9)  return (v/1e9).toFixed(1)  + 'B';
+  if (v >= 1e6)  return (v/1e6).toFixed(1)  + 'M';
+  if (v >= 1e3)  return (v/1e3).toFixed(1)  + 'K';
+  return v.toLocaleString();
+}
+
+// วาด sparkline ลงใน canvas element
+function drawSparkline(canvas, prices, retVal) {
+  if (!canvas || !prices || prices.length < 2) return;
+  const W = canvas.width  = 60;
+  const H = canvas.height = 24;
+  const ctx = canvas.getContext('2d');
+  const vals = prices.map(p => p[1]);
+  const mn = Math.min(...vals), mx = Math.max(...vals);
+  const range = mx - mn || 1;
+  const toY = v => H - 2 - (v - mn) / range * (H - 4);
+  const toX = (i, n) => (i / (n-1)) * (W - 2) + 1;
+  const color = (retVal || 0) >= 0 ? '#3fb950' : '#f85149';
+  ctx.clearRect(0,0,W,H);
+  ctx.beginPath();
+  vals.forEach((v,i) => i===0 ? ctx.moveTo(toX(i,vals.length), toY(v)) : ctx.lineTo(toX(i,vals.length), toY(v)));
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+// render sparklines หลังจาก DOM update
+function renderSparklinesInTable(tbodyId, stocks) {
+  requestAnimationFrame(() => {
+    const rows = document.querySelectorAll('#' + tbodyId + ' tr[data-sym]');
+    const stockMap = Object.fromEntries(stocks.map(s => [s.symbol, s]));
+    rows.forEach(row => {
+      const sym = row.dataset.sym;
+      const s = stockMap[sym];
+      if (!s || !s.price_history) return;
+      const canvas = row.querySelector('.spark-canvas');
+      if (canvas) drawSparkline(canvas, s.price_history, s.ret_1m);
+    });
+  });
+}
+
+function pct(v, dec=2) {
+  if (v == null) return '<span class="text2">—</span>';
+  const c = v > 0 ? "green" : v < 0 ? "red" : "text2";
+  return `<span class="${c}">${v > 0 ? "+" : ""}${v.toFixed(dec)}%</span>`;
+}
+function rsColor(rs) {
+  if (rs == null) return "text2";
+  if (rs >= 90) return "green";
+  if (rs >= 70) return "blue";
+  if (rs >= 50) return "yellow";
+  return "red";
+}
+function emaBadge(above) {
+  if (above == null) return '<span class="text2">—</span>';
+  return above
+    ? '<span class="badge badge-green">▲</span>'
+    : '<span class="badge badge-red">▼</span>';
+}
+
+function computeSectorRanks() {
+  if (!DATA) return {};
+  const bySector = {};
+  DATA.stocks.forEach(s => {
+    const sec = s.sector || 'Unknown';
+    if (!bySector[sec]) bySector[sec] = [];
+    bySector[sec].push(s);
+  });
+  const rankMap = {};
+  Object.values(bySector).forEach(group => {
+    const sorted = [...group].sort((a, b) => (b.rs_score ?? -1) - (a.rs_score ?? -1));
+    sorted.forEach((s, i) => {
+      rankMap[s.symbol] = { rank: i + 1, total: sorted.length };
+    });
+  });
+  return rankMap;
+}
+
+function secRankHtml(sr) {
+  if (!sr) return '—';
+  const ratio = sr.rank / sr.total;
+  const cls = ratio <= 0.25 ? 'green' : ratio <= 0.5 ? 'yellow' : 'text2';
+  return `<span class="${cls}" style="font-weight:600">${sr.rank}</span><span class="text2" style="font-size:10px">/${sr.total}</span>`;
+}
+function fmtValuation(val, type) {
+  if (val == null) return '—';
+  if (type === 'pe') {
+    const cls = val < 15 ? 'green' : val < 25 ? 'yellow' : 'red';
+    return `<span class="${cls}" style="font-weight:600">${val.toFixed(1)}x</span>`;
+  }
+  if (type === 'pbv') {
+    const cls = val < 1 ? 'green' : val < 2 ? 'yellow' : 'red';
+    return `<span class="${cls}" style="font-weight:600">${val.toFixed(2)}x</span>`;
+  }
+  return val.toFixed(2);
+}
+
+// ============================================================
+// OVERVIEW
+// ============================================================
+function renderOverview() {
+  if (!DATA) return;
+  const stocks = DATA.stocks;
+  const total  = stocks.length;
+
+  // --- stat cards ---
+  const above50  = stocks.filter(s => s.above_ema50).length;
+  const above200 = stocks.filter(s => s.above_ema200).length;
+  const rs80     = stocks.filter(s => (s.rs_score||0) >= 80).length;
+  const rs90     = stocks.filter(s => (s.rs_score||0) >= 90).length;
+
+  const stocks1m = stocks.filter(s => s.ret_1m != null);
+  const stocks1d = stocks.filter(s => s.ret_1d != null);
+  const avgRet1m = stocks1m.length ? (stocks1m.reduce((a,s) => a + s.ret_1m, 0) / stocks1m.length).toFixed(2) : "0.00";
+  const avgRet1d = stocks1d.length ? (stocks1d.reduce((a,s) => a + s.ret_1d, 0) / stocks1d.length).toFixed(2) : "0.00";
+
+  const statColor = v => v > 0 ? "var(--green)" : v < 0 ? "var(--red)" : "var(--text2)";
+
+  document.getElementById("stat-cards").innerHTML = `
+    <div class="card">
+      <div class="card-title">หุ้นทั้งหมด</div>
+      <div class="stat-val">${total}</div>
+      <div class="stat-label">SET + mai</div>
+      <div class="stat-sub">RS 80+ : <span class="green">${rs80} ตัว</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Avg Return 1D</div>
+      <div class="stat-val" style="color:${statColor(avgRet1d)}">${avgRet1d > 0 ? "+" : ""}${avgRet1d}%</div>
+      <div class="stat-label">ค่าเฉลี่ยทั้งตลาด</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Avg Return 1M</div>
+      <div class="stat-val" style="color:${statColor(avgRet1m)}">${avgRet1m > 0 ? "+" : ""}${avgRet1m}%</div>
+      <div class="stat-label">ค่าเฉลี่ยทั้งตลาด</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Market Breadth</div>
+      <div class="stat-val blue">${Math.round(above50/total*100)}%</div>
+      <div class="stat-label">% เหนือ EMA50</div>
+      <div class="stat-sub">${Math.round(above200/total*100)}% เหนือ EMA200</div>
+    </div>
+  `;
+
+  // --- breadth bars ---
+  const above20  = stocks.filter(s => s.above_ema20).length;
+  const bars = [
+    { label:"EMA20",  n: above20,  total, color:"#bc8cff" },
+    { label:"EMA50",  n: above50,  total, color:"var(--blue)" },
+    { label:"EMA200", n: above200, total, color:"var(--green)" },
+  ];
+  document.getElementById("breadth-bars").innerHTML = bars.map(b => {
+    const pct = Math.round(b.n/b.total*100);
+    return `
+      <div class="breadth-row">
+        <div class="breadth-label">${b.label}</div>
+        <div class="breadth-track"><div class="breadth-fill" style="width:${pct}%;background:${b.color}"></div></div>
+        <div class="breadth-pct" style="color:${b.color}">${pct}%</div>
+      </div>
+      <div style="font-size:10px;color:var(--text2);margin:-4px 0 8px 80px">${b.n} จาก ${b.total} ตัว</div>
+    `;
+  }).join("");
+
+  // --- RS distribution ---
+  const bins = [
+    {label:"0-19",  min:0,  max:20,  color:"var(--red)"},
+    {label:"20-39", min:20, max:40,  color:"#e05a20"},
+    {label:"40-59", min:40, max:60,  color:"var(--yellow)"},
+    {label:"60-69", min:60, max:70,  color:"#6ea8fe"},
+    {label:"70-79", min:70, max:80,  color:"var(--blue)"},
+    {label:"80-89", min:80, max:90,  color:"#5fca7f"},
+    {label:"90-99", min:90, max:100, color:"var(--green)"},
+  ];
+  const binCounts = bins.map(b => stocks.filter(s => (s.rs_score||0) >= b.min && (s.rs_score||0) < b.max).length);
+  const maxBin = Math.max(...binCounts);
+  document.getElementById("rs-dist-bars").innerHTML = bins.map((b,i) => {
+    const h = Math.round(binCounts[i]/maxBin*56) + 4;
+    return `<div class="rs-bar" style="background:${b.color};height:${h}px" title="${b.label}: ${binCounts[i]} ตัว"></div>`;
+  }).join("");
+  document.getElementById("rs-dist-labels").innerHTML = bins.map(b => `<div class="rs-lbl">${b.label}</div>`).join("");
+  document.getElementById("rs-dist-summary").textContent =
+    `RS 90+ : ${binCounts[6]} ตัว  |  RS 80+ : ${binCounts[5]+binCounts[6]} ตัว  |  RS 70+ : ${binCounts[4]+binCounts[5]+binCounts[6]} ตัว`;
+
+  // --- gainers/losers ---
+  const sorted1d = stocks.filter(s => s.ret_1d != null).sort((a,b) => b.ret_1d - a.ret_1d);
+  const gainers = sorted1d.slice(0,10);
+  const losers  = sorted1d.slice(-10).reverse();
+
+  const miniTbl = (rows, isGainer) => `
+    <thead><tr><th>Symbol</th><th>Sector</th><th class="r">1D%</th><th class="r">RS</th></tr></thead>
+    <tbody>${rows.map(s => `
+      <tr>
+        <td><strong>${s.symbol}</strong></td>
+        <td class="text2">${s.sector || "—"}</td>
+        <td class="r">${pct(s.ret_1d)}</td>
+        <td class="r"><span class="${rsColor(s.rs_score)}">${s.rs_score ?? "—"}</span></td>
+      </tr>`).join("")}
+    </tbody>`;
+  document.getElementById("tbl-gainers").innerHTML = miniTbl(gainers, true);
+  document.getElementById("tbl-losers").innerHTML  = miniTbl(losers, false);
+
+  // --- industry bars ---
+  const industries = [...DATA.industries].sort((a,b) => (b.ret_1m||0)-(a.ret_1m||0));
+  const maxAbs = Math.max(...industries.map(ig => Math.abs(ig.ret_1m||0)));
+  document.getElementById("industry-bars").innerHTML = industries.map(ig => {
+    const r = ig.ret_1m || 0;
+    const w = Math.round(Math.abs(r)/maxAbs*100);
+    return `
+      <div class="sec-bar-row">
+        <div class="sec-name">${ig.name}</div>
+        <div class="sec-track">
+          ${r >= 0
+            ? `<div class="sec-fill-pos" style="width:${w}%"></div>`
+            : `<div class="sec-fill-neg" style="width:${w}%"></div>`}
+        </div>
+        <div class="sec-val ${r>0?'green':r<0?'red':'text2'}">${r>0?"+":""}${r.toFixed(1)}%</div>
+      </div>`;
+  }).join("");
+
+  // --- RS leaders preview ---
+  const leaders = [...stocks].sort((a,b) => (b.rs_score||0)-(a.rs_score||0)).slice(0,10);
+  document.getElementById("tbl-rs-preview").innerHTML = `
+    <thead><tr><th>RS</th><th>Symbol</th><th>Sector</th><th class="r">1M%</th><th class="r">3M%</th></tr></thead>
+    <tbody>${leaders.map(s => `
+      <tr>
+        <td><span class="${rsColor(s.rs_score)}">${s.rs_score}</span></td>
+        <td><strong>${s.symbol}</strong></td>
+        <td class="text2" style="font-size:11px">${s.sector||"—"}</td>
+        <td class="r">${pct(s.ret_1m)}</td>
+        <td class="r">${pct(s.ret_3m)}</td>
+      </tr>`).join("")}
+    </tbody>`;
+}
+
+// ============================================================
+// ROTATION
+// ============================================================
+function setRotView(v, btn) {
+  rotView = v;
+  document.querySelectorAll("#page-rotation .filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderRotation();
+}
+
+function renderRotation() {
+  if (!DATA) return;
+  const data = rotView === "sector" ? DATA.sectors : DATA.industries;
+  const sorted = [...data].sort((a,b) => (b.ret_1m||0)-(a.ret_1m||0));
+  const maxAbs = Math.max(...sorted.map(s => Math.abs(s.ret_1m||0)), 1);
+
+  // --- Sector Ranking Bars ---
+  document.getElementById("rotation-bars").innerHTML = sorted.map((s) => {
+    const r = s.ret_1m || 0;
+    const w = Math.round(Math.abs(r)/maxAbs*100);
+    return `
+      <div class="sec-bar-row">
+        <div class="sec-name">${s.name}</div>
+        <div class="sec-track">
+          ${r >= 0
+            ? `<div class="sec-fill-pos" style="width:${w}%"></div>`
+            : `<div class="sec-fill-neg" style="width:${w}%"></div>`}
+        </div>
+        <div class="sec-val ${r>0?'green':r<0?'red':'text2'}">${r>0?"+":""}${r.toFixed(1)}%</div>
+        <div class="sec-rs text2">${s.avg_rs != null ? Math.round(s.avg_rs) : "—"}</div>
+      </div>`;
+  }).join("");
+
+  // --- Scatter Plot ---
+  drawRotationScatter(sorted);
+
+  // --- Leaders / Damage ---
+  const top5    = sorted.slice(0,10);
+  const bottom5 = [...sorted].sort((a,b) => (a.ret_1m||0)-(b.ret_1m||0)).slice(0,10);
+  const hdr = `<thead><tr><th>#</th><th>ชื่อ</th><th class="r">1M%</th><th class="r">RS</th></tr></thead>`;
+  const boardHTML = (rows, isLeader) => rows.map((s,i) => `
+    <tr>
+      <td>${i+1}</td><td>${s.name}</td>
+      <td class="r ${isLeader?'green':'red'}">${(s.ret_1m||0)>0?"+":""}${(s.ret_1m||0).toFixed(1)}%</td>
+      <td class="r text2">${s.avg_rs!=null?Math.round(s.avg_rs):"—"}</td>
+    </tr>`).join("");
+  document.getElementById("tbl-leaders").innerHTML = hdr + "<tbody>" + boardHTML(top5,true)    + "</tbody>";
+  document.getElementById("tbl-damage").innerHTML  = hdr + "<tbody>" + boardHTML(bottom5,false) + "</tbody>";
+}
+
+function drawRotationScatter(sectors) {
+  const canvas = document.getElementById("rotation-map");
+  if (!canvas) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const W = rect.width || 900, H = 520;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + "px";
+  canvas.style.height = H + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+
+  const PAD = { top:36, right:24, bottom:52, left:58 };
+  const PW = W - PAD.left - PAD.right;
+  const PH = H - PAD.top  - PAD.bottom;
+
+  const xs = sectors.map(s => s.ret_3m || 0);
+  const ys = sectors.map(s => s.ret_1m || 0);
+
+  // Center view on data mean so the cluster appears in the middle of the chart
+  const xMean = xs.reduce((a,b)=>a+b,0) / xs.length;
+  const yMean = ys.reduce((a,b)=>a+b,0) / ys.length;
+  const xSpan = Math.max(...xs.map(x => Math.abs(x - xMean)), 8) * 1.3;
+  const ySpan = Math.max(...ys.map(y => Math.abs(y - yMean)), 8) * 1.3;
+  const xLow = xMean - xSpan, xHigh = xMean + xSpan;
+  const yLow = yMean - ySpan, yHigh = yMean + ySpan;
+
+  const toX = v => PAD.left + (v - xLow) / (2 * xSpan) * PW;
+  const toY = v => PAD.top  + (yHigh - v) / (2 * ySpan) * PH;
+
+  const palette = [
+    "#58a6ff","#3fb950","#ffa657","#f85149","#d2a8ff",
+    "#79c0ff","#56d364","#e3b341","#ff7b72","#bc8cff",
+    "#1f9e75","#c9d1d9","#a5d6ff","#ffb347","#ff6eb4",
+    "#7ee787","#ffa500","#87ceeb","#dda0dd","#98fb98",
+    "#f0e68c","#ff69b4","#40e0d0","#ff4500","#9370db",
+    "#20b2aa","#dc143c","#00ced1","#ff1493",
+  ];
+  const nameToColor = {};
+  sectors.forEach((s,i) => { nameToColor[s.name] = palette[i % palette.length]; });
+
+  const points = sectors.map(s => ({
+    x: toX(s.ret_3m||0),
+    y: toY(s.ret_1m||0),
+    name: s.name,
+    ret_1m: s.ret_1m,
+    ret_3m: s.ret_3m,
+    ret_6m: s.ret_6m,
+    ret_1y: s.ret_1y,
+    avg_rs: s.avg_rs,
+    color: nameToColor[s.name],
+  }));
+
+  const R = 6;
+
+  function hexAlpha(hex, alpha) {
+    const r = parseInt(hex.slice(1,3),16);
+    const g = parseInt(hex.slice(3,5),16);
+    const b = parseInt(hex.slice(5,7),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
+  function drawArrowHead(fx, fy, tx, ty, color, alpha) {
+    if (Math.hypot(tx-fx, ty-fy) < 4) return;
+    const angle = Math.atan2(ty-fy, tx-fx), sz = 5;
+    ctx.save();
+    ctx.globalAlpha = alpha; ctx.fillStyle = color;
+    ctx.translate(tx, ty); ctx.rotate(angle);
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-sz,-sz*0.45); ctx.lineTo(-sz,sz*0.45);
+    ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+
+  // ---- Main redraw — เรียกใหม่ทุกครั้งที่ hover ----
+  function redraw(highlightName) {
+    ctx.clearRect(0, 0, W, H);
+    const ox = toX(0), oy = toY(0);
+
+    // Quadrant backgrounds
+    const quads = [
+      { x:PAD.left, y:PAD.top,  w:ox-PAD.left,    h:oy-PAD.top,      color:"rgba(20,45,85,0.3)",  label:"Improving", tx:"left",  ty:"top" },
+      { x:ox,       y:PAD.top,  w:PAD.left+PW-ox, h:oy-PAD.top,      color:"rgba(10,55,25,0.3)",  label:"Leading",   tx:"right", ty:"top" },
+      { x:PAD.left, y:oy,       w:ox-PAD.left,    h:PAD.top+PH-oy,   color:"rgba(55,10,10,0.25)", label:"Lagging",   tx:"left",  ty:"bottom" },
+      { x:ox,       y:oy,       w:PAD.left+PW-ox, h:PAD.top+PH-oy,   color:"rgba(55,35,5,0.2)",   label:"Weakening", tx:"right", ty:"bottom" },
+    ];
+    quads.forEach(q => {
+      ctx.fillStyle = q.color; ctx.fillRect(q.x,q.y,q.w,q.h);
+      ctx.fillStyle = "rgba(160,170,185,0.35)";
+      ctx.font = "bold 11px Segoe UI, sans-serif";
+      ctx.textAlign = q.tx === "left" ? "left" : "right";
+      ctx.fillText(q.label, q.tx==="left"?q.x+10:q.x+q.w-10, q.ty==="top"?q.y+18:q.y+q.h-8);
+    });
+
+    // Grid
+    ctx.setLineDash([3,5]);
+    const xTicks = [-60,-50,-40,-30,-20,-10,0,10,20,30,40,50,60].filter(v => v > xLow && v < xHigh);
+    const yTicks = [-40,-30,-25,-20,-15,-10,-5,0,5,10,15,20,25,30,40].filter(v => v > yLow && v < yHigh);
+    xTicks.forEach(v => {
+      ctx.strokeStyle = v===0?"rgba(139,148,158,0.6)":"rgba(48,54,61,0.9)";
+      ctx.lineWidth = v===0?1.5:0.5;
+      ctx.beginPath(); ctx.moveTo(toX(v),PAD.top); ctx.lineTo(toX(v),PAD.top+PH); ctx.stroke();
+    });
+    yTicks.forEach(v => {
+      ctx.strokeStyle = v===0?"rgba(139,148,158,0.6)":"rgba(48,54,61,0.9)";
+      ctx.lineWidth = v===0?1.5:0.5;
+      ctx.beginPath(); ctx.moveTo(PAD.left,toY(v)); ctx.lineTo(PAD.left+PW,toY(v)); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+
+    // Tick + axis labels
+    ctx.fillStyle = "rgba(139,148,158,0.85)"; ctx.font = "10px Segoe UI, sans-serif";
+    ctx.textAlign = "center";
+    xTicks.forEach(v => { if(v!==0) ctx.fillText((v>0?"+":"")+v+"%", toX(v), PAD.top+PH+16); });
+    ctx.textAlign = "right";
+    yTicks.forEach(v => { if(v!==0) ctx.fillText((v>0?"+":"")+v+"%", PAD.left-7, toY(v)+4); });
+    ctx.fillStyle = "rgba(139,148,158,0.9)"; ctx.font = "11px Segoe UI, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("3M Return % (Trend)", PAD.left+PW/2, H-8);
+    ctx.save(); ctx.translate(13, PAD.top+PH/2); ctx.rotate(-Math.PI/2);
+    ctx.fillText("1M Return % (Momentum)", 0, 0); ctx.restore();
+
+    // วาดลำดับ: dimmed ก่อน, highlighted บนสุด
+    const dimmed = highlightName ? points.filter(p => p.name !== highlightName) : [];
+    const active = highlightName ? points.filter(p => p.name === highlightName) : points;
+    const order  = [...dimmed, ...active];
+
+    // Trails
+    order.forEach(p => {
+      const isDim = highlightName && p.name !== highlightName;
+      const anchors = [{ rx: p.ret_6m??0, ry: p.ret_3m??0 }, { rx: p.ret_3m??0, ry: p.ret_1m??0 }];
+      if (p.ret_1y != null && p.ret_6m != null) anchors.unshift({ rx: p.ret_1y??0, ry: p.ret_6m??0 });
+      const trail = anchors.map(a => ({ x: toX(a.rx), y: toY(a.ry) }));
+      if (trail.length < 2) return;
+
+      for (let i = 1; i < trail.length; i++) {
+        const prev = trail[i-1], curr = trail[i];
+        const t0 = (i-1)/(trail.length-1), t1 = i/(trail.length-1);
+
+        if (isDim) {
+          ctx.save(); ctx.globalAlpha = 0.06; ctx.strokeStyle = "#8b949e";
+          ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(prev.x,prev.y); ctx.lineTo(curr.x,curr.y); ctx.stroke(); ctx.restore();
+        } else {
+          const grad = ctx.createLinearGradient(prev.x,prev.y,curr.x,curr.y);
+          grad.addColorStop(0, hexAlpha(p.color, 0.2 + t0*0.6));
+          grad.addColorStop(1, hexAlpha(p.color, 0.2 + t1*0.6));
+          ctx.save(); ctx.strokeStyle = grad; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(prev.x,prev.y); ctx.lineTo(curr.x,curr.y); ctx.stroke(); ctx.restore();
+          // dots
+          for (let k = 1; k < 3; k++) {
+            const t = k/3;
+            ctx.save(); ctx.globalAlpha = 0.2+(t0+t*(t1-t0))*0.65; ctx.fillStyle = p.color;
+            ctx.beginPath(); ctx.arc(prev.x+(curr.x-prev.x)*t, prev.y+(curr.y-prev.y)*t, 2.5, 0, Math.PI*2); ctx.fill(); ctx.restore();
+          }
+          drawArrowHead(prev.x, prev.y, prev.x+(curr.x-prev.x)*0.65, prev.y+(curr.y-prev.y)*0.65, p.color, 0.35+t1*0.6);
+        }
+      }
+    });
+
+    // Squares (current position)
+    order.forEach(p => {
+      const isDim = highlightName && p.name !== highlightName;
+      ctx.save();
+      ctx.globalAlpha = isDim ? 0.1 : 1;
+      ctx.fillStyle   = isDim ? "#6e7681" : p.color;
+      ctx.fillRect(p.x-R, p.y-R, R*2, R*2);
+      ctx.strokeStyle = "rgba(13,17,23,0.85)"; ctx.lineWidth = 1.5;
+      ctx.strokeRect(p.x-R, p.y-R, R*2, R*2);
+      ctx.restore();
+    });
+
+    // Labels — ถ้า highlight: แสดงเฉพาะ active; ถ้าไม่ highlight: แสดงทุกตัวแบบเดิม
+    ctx.font = "bold 10px Segoe UI, sans-serif";
+    const LABEL_PAD = R + 4;
+    const dirs = [[1,0],[-1,0],[0,-1],[0,1],[0.7,-0.7],[-0.7,-0.7],[0.7,0.7],[-0.7,0.7]];
+    const placed = [];
+    function overlaps(lx,ly,lw,lh) {
+      return placed.some(pl => lx<pl.x+pl.w && lx+lw>pl.x && ly-lh<pl.y && ly>pl.y-pl.h);
+    }
+    const labelSet = highlightName ? active : [...points].sort((a,b)=>(b.avg_rs||0)-(a.avg_rs||0));
+    labelSet.forEach(p => {
+      const short = p.name.length > 18 ? p.name.slice(0,16)+"…" : p.name;
+      const lw = ctx.measureText(short).width + 4, lh = 11;
+      let ok = false;
+      for (const [dx,dy] of dirs) {
+        const lx = p.x + dx*LABEL_PAD + (dx<0?-lw:2);
+        const ly = p.y + dy*LABEL_PAD + (dy>=0?lh:0);
+        if (lx<PAD.left||lx+lw>W-4||ly>H-30||ly-lh<PAD.top) continue;
+        if (!overlaps(lx,ly,lw,lh)) {
+          ctx.fillStyle = highlightName ? hexAlpha(p.color, 0.92) : "rgba(13,17,23,0.75)";
+          ctx.fillRect(lx-2, ly-lh+1, lw, lh+2);
+          ctx.fillStyle = "#ffffff"; ctx.textAlign = "left";
+          ctx.fillText(short, lx, ly);
+          placed.push({x:lx-2, y:ly, w:lw, h:lh+2}); ok = true; break;
+        }
+      }
+      if (!ok) {
+        ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fillStyle="white"; ctx.fill();
+      }
+    });
+
+    ctx.globalAlpha = 1;
+  }
+
+  // ---- Legend chips ----
+  let pinnedSector = null;
+
+  const legendEl = document.getElementById("rot-legend");
+  if (legendEl) {
+    legendEl.innerHTML = points.map(p => {
+      const safeId = "rchip_" + p.name.replace(/[^a-zA-Z0-9]/g, "_");
+      const label  = p.name.length > 22 ? p.name.slice(0,20)+"…" : p.name;
+      return `<div class="rot-chip" id="${safeId}" data-sector="${p.name.replace(/"/g,'&quot;')}"
+                   style="color:${p.color};opacity:0.65">
+                <span class="rot-chip-sq" style="background:${p.color}"></span>${label}
+              </div>`;
+    }).join("");
+
+    legendEl.querySelectorAll(".rot-chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        const name = chip.dataset.sector;
+        pinnedSector = pinnedSector === name ? null : name;
+        legendEl.querySelectorAll(".rot-chip").forEach(c => {
+          c.classList.remove("pinned");
+          c.style.opacity = pinnedSector ? "0.3" : "0.65";
+        });
+        if (pinnedSector) {
+          chip.classList.add("pinned");
+          chip.style.opacity = "1";
+        }
+        redraw(pinnedSector);
+      });
+    });
+  }
+
+  // วาดครั้งแรก
+  redraw(null);
+
+  // Tooltip
+  let tooltipDiv = document.getElementById("rot-tooltip");
+  if (!tooltipDiv) {
+    tooltipDiv = document.createElement("div");
+    tooltipDiv.id = "rot-tooltip";
+    tooltipDiv.style.cssText = `
+      position:fixed;background:rgba(22,27,34,0.97);border:1px solid #30363d;
+      color:#e6edf3;padding:8px 12px;border-radius:6px;font-size:12px;
+      pointer-events:none;display:none;z-index:999;line-height:1.6;
+      box-shadow:0 4px 12px rgba(0,0,0,0.5);
+    `;
+    document.body.appendChild(tooltipDiv);
+  }
+
+  canvas._points = points;
+
+  function showTooltip(hit, e) {
+    const r1m=hit.ret_1m||0, r3m=hit.ret_3m||0, r6m=hit.ret_6m||0;
+    const fmt = v => `<span style="color:${v>=0?'#3fb950':'#f85149'}">${v>0?'+':''}${v.toFixed(1)}%</span>`;
+    tooltipDiv.innerHTML = `
+      <div style="font-weight:600;color:${hit.color};margin-bottom:4px">${hit.name}</div>
+      <div style="display:grid;grid-template-columns:auto auto;gap:2px 10px;font-size:11px">
+        <span style="color:#8b949e">1M</span>${fmt(r1m)}
+        <span style="color:#8b949e">3M</span>${fmt(r3m)}
+        <span style="color:#8b949e">6M</span>${fmt(r6m)}
+      </div>
+      <div style="margin-top:4px">Avg RS: <span style="color:#58a6ff">${hit.avg_rs!=null?Math.round(hit.avg_rs):'—'}</span></div>
+    `;
+    tooltipDiv.style.display = "block";
+    tooltipDiv.style.left = (e.clientX+14)+"px";
+    tooltipDiv.style.top  = (e.clientY-10)+"px";
+  }
+
+  canvas.onmousemove = function(e) {
+    const r2 = canvas.getBoundingClientRect();
+    const scaleX = (W*dpr)/r2.width/dpr, scaleY = (H*dpr)/r2.height/dpr;
+    const mx = (e.clientX-r2.left)*scaleX, my = (e.clientY-r2.top)*scaleY;
+    const hit = points.find(p => Math.abs(p.x-mx)<R+6 && Math.abs(p.y-my)<R+6);
+    if (hit) {
+      redraw(hit.name);
+      showTooltip(hit, e);
+      canvas.style.cursor = "pointer";
+    } else if (pinnedSector) {
+      redraw(pinnedSector);
+      tooltipDiv.style.display = "none";
+      canvas.style.cursor = "crosshair";
+    } else {
+      redraw(null);
+      tooltipDiv.style.display = "none";
+      canvas.style.cursor = "crosshair";
+    }
+  };
+  canvas.onmouseleave = () => {
+    redraw(pinnedSector);
+    tooltipDiv.style.display = "none";
+  };
+}
+
+
+// ============================================================
+// RS LEADERS
+// ============================================================
+function renderRSLeaders() {
+  if (!DATA) return;
+  const stocks = DATA.stocks.filter(s => (s.rs_score||0) >= 80);
+
+  // stat cards
+  const rs90 = stocks.filter(s => s.rs_score >= 90).length;
+  const rs80 = stocks.filter(s => s.rs_score >= 80 && s.rs_score < 90).length;
+  const avgRS = Math.round(stocks.reduce((a,s) => a+(s.rs_score||0),0)/stocks.length);
+  const avgRet1m = (stocks.reduce((a,s)=>a+(s.ret_1m||0),0)/stocks.length).toFixed(1);
+
+  document.getElementById("rs-stat-cards").innerHTML = `
+    <div class="card"><div class="card-title">RS 90-99</div><div class="stat-val green">${rs90}</div><div class="stat-label">หุ้น</div></div>
+    <div class="card"><div class="card-title">RS 80-89</div><div class="stat-val blue">${rs80}</div><div class="stat-label">หุ้น</div></div>
+    <div class="card"><div class="card-title">Avg RS Score</div><div class="stat-val">${avgRS}</div><div class="stat-label">เฉลี่ย RS 80+</div></div>
+    <div class="card"><div class="card-title">Avg 1M Return</div><div class="stat-val ${avgRet1m>0?'green':'red'}">${avgRet1m>0?"+":""}${avgRet1m}%</div><div class="stat-label">เฉลี่ย RS 80+</div></div>
+  `;
+
+  // sector filter buttons
+  const sectors = ["ALL", ...new Set(stocks.map(s=>s.sector||"—").sort())];
+  document.getElementById("rs-sector-filters").innerHTML = sectors.map(s =>
+    `<button class="filter-btn ${s===rsFilter?'active':''}" onclick="setRSFilter('${s}',this)">${s}</button>`
+  ).join("");
+
+  renderRSTable();
+}
+
+function setRSFilter(val, btn) {
+  rsFilter = val;
+  document.querySelectorAll("#rs-sector-filters .filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderRSTable();
+}
+
+function renderRSTable() {
+  if (!DATA) return;
+  let stocks = DATA.stocks.filter(s => (s.rs_score||0) >= 80);
+  if (rsFilter !== "ALL") stocks = stocks.filter(s => s.sector === rsFilter);
+  stocks.sort((a,b) => (b.rs_score||0)-(a.rs_score||0));
+
+  document.getElementById("rs-tbody").innerHTML = stocks.map(s => `
+    <tr>
+      <td><span class="${rsColor(s.rs_score)}" style="font-weight:700">${s.rs_score}</span></td>
+      <td><strong>${s.symbol}</strong></td>
+      <td style="font-size:11px;color:var(--text2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</td>
+      <td style="font-size:11px">${s.sector||"—"}</td>
+      <td class="r">${s.price?.toFixed(2) ?? "—"}</td>
+      <td class="r">${pct(s.ret_1d)}</td>
+      <td class="r">${pct(s.ret_1w)}</td>
+      <td class="r">${pct(s.ret_1m)}</td>
+      <td class="r">${pct(s.ret_3m)}</td>
+      <td class="r">${pct(s.ret_ytd)}</td>
+      <td class="r">${emaBadge(s.above_ema50)}</td>
+      <td class="r">${emaBadge(s.above_ema200)}</td>
+    </tr>`).join("");
+}
+
+// ============================================================
+// SECTORS
+// ============================================================
+function setSectorView(v, btn) {
+  sectorView = v;
+  document.querySelectorAll("#page-sectors .filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderSectorTable();
+}
+function sortSectors(key) {
+  if (sectorSort.key === key) sectorSort.dir *= -1;
+  else { sectorSort.key = key; sectorSort.dir = -1; }
+  renderSectorTable();
+}
+function renderSectors() { renderSectorTable(); }
+function renderSectorTable() {
+  if (!DATA) return;
+
+  // นับหุ้นที่ทำ 52W High ใหม่ (price >= high_52w) ต่อ sector/industry
+  const groupKey = sectorView === 'sector' ? 'sector' : 'industry';
+  const nhMap = {};
+  DATA.stocks.forEach(s => {
+    const key = s[groupKey];
+    if (!key) return;
+    if (!nhMap[key]) nhMap[key] = 0;
+    if (s.high_52w > 0 && s.price >= s.high_52w) nhMap[key]++;
+  });
+
+  const data = [...(sectorView === "sector" ? DATA.sectors : DATA.industries)].map(s => ({
+    ...s,
+    newHighCount: nhMap[s.name] ?? 0,
+    newHighPct:   s.count > 0 ? (nhMap[s.name] ?? 0) / s.count * 100 : 0,
+  }));
+  data.sort((a,b) => ((b[sectorSort.key]||0)-(a[sectorSort.key]||0)) * sectorSort.dir);
+
+  document.getElementById("sectors-tbody").innerHTML = data.map((s,i) => {
+    const abbr = SECTOR_ABBR[s.name] || "";
+    const abbrTag = abbr && abbr !== "—" ? ` <span style="font-size:10px;color:var(--blue);background:#0d2847;padding:1px 5px;border-radius:3px;margin-left:4px">${abbr}</span>` : "";
+    const nhRatio = s.count > 0 ? s.newHighCount / s.count : 0;
+    const nhColor = nhRatio >= 0.25 ? 'green' : nhRatio >= 0.1 ? 'yellow' : 'text2';
+    return `
+    <tr style="cursor:pointer" onclick="openSectorModal('${s.name.replace(/'/g,"\\'")}')">
+      <td class="text2">${i+1}</td>
+      <td><strong>${s.name}</strong>${abbrTag}</td>
+      <td class="r text2">${s.count}</td>
+      <td class="r">${pct(s.ret_1d,2)}</td>
+      <td class="r">${pct(s.ret_1w,2)}</td>
+      <td class="r">${pct(s.ret_1m,2)}</td>
+      <td class="r">${pct(s.ret_3m,2)}</td>
+      <td class="r">${pct(s.ret_1y,2)}</td>
+      <td class="r"><span class="${rsColor(s.avg_rs)}">${s.avg_rs!=null?Math.round(s.avg_rs):"—"}</span></td>
+      <td class="r">${s.pct_above_ema50!=null?s.pct_above_ema50+"%":"—"}</td>
+      <td class="r"><span class="${nhColor}" style="font-weight:600;cursor:pointer;text-decoration:underline dotted" onclick="event.stopPropagation();openSectorModal('${s.name.replace(/'/g,"\\'")}',true)">${s.newHighCount}</span><span class="text2" style="font-size:10px">/${s.count}</span></td>
+      <td class="r">${fmtValuation(s.avg_pe, 'pe')}</td>
+      <td class="r">${fmtValuation(s.avg_pbv, 'pbv')}</td>
+      <td class="r">${s.avg_div_yield != null ? `<span class="${s.avg_div_yield >= 4 ? 'green' : s.avg_div_yield >= 2 ? 'yellow' : 'text2'}" style="font-weight:600">${s.avg_div_yield.toFixed(1)}%</span>` : '—'}</td>
+    </tr>`;
+  }).join("");
+}
+
+// ============================================================
+// STOCKS ALL
+// ============================================================
+function sortStocks(key) {
+  if (stockSort.key === key) stockSort.dir *= -1;
+  else { stockSort.key = key; stockSort.dir = -1; }
+  // อัปเดต header indicator
+  const headers = {
+    rs_score:'sh-rs', price:'sh-px',
+    ret_1d:'sh-1d', ret_1w:'sh-1w', ret_1m:'sh-1m', ret_3m:'sh-3m', ret_ytd:'sh-ytd',
+    mkt_cap:'sh-cap', vol_avg20:'sh-vol',
+    above_ema50_n:'sh-e50', above_ema200_n:'sh-e200'
+  };
+  document.querySelectorAll('#tbl-stocks th').forEach(th => {
+    const txt = th.textContent.replace(/[↑↓↕]/g,'').trim();
+    th.textContent = txt + (th.id && headers[stockSort.key]===th.id ? (stockSort.dir===-1?' ↓':' ↑') : ' ↕');
+  });
+  renderStocksTable();
+}
+function filterStocks() {
+  stockSearch = document.getElementById("stock-search").value.toLowerCase();
+  renderStocksTable();
+}
+function setIndustryFilter(val, btn) {
+  industryFilter = val;
+  sectorFilter = "ALL";
+  document.querySelectorAll("#industry-filter-btns .filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  _rebuildSectorBtns();
+  renderStocksTable();
+}
+
+function setSectorFilter(val, btn) {
+  sectorFilter = val;
+  document.querySelectorAll("#sector-filter-btns .filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderStocksTable();
+}
+
+function _rebuildSectorBtns() {
+  const base = industryFilter === "ALL" ? DATA.stocks : DATA.stocks.filter(s => s.industry === industryFilter);
+  const sectors = ["ALL", ...new Set(base.map(s => s.sector || "Unknown").sort())];
+  document.getElementById("sector-filter-btns").innerHTML = sectors.map(s =>
+    `<button class="filter-btn ${s===sectorFilter?'active':''}" onclick="setSectorFilter('${s.replace(/'/g,"\\'")}',this)">${s}</button>`
+  ).join("");
+}
+
+function renderStocks() {
+  if (!DATA) return;
+  const industries = ["ALL", ...new Set(DATA.stocks.map(s => s.industry || "Unknown").sort())];
+  document.getElementById("industry-filter-btns").innerHTML = industries.map(ig =>
+    `<button class="filter-btn ${ig===industryFilter?'active':''}" onclick="setIndustryFilter('${ig.replace(/'/g,"\\'")}',this)">${ig}</button>`
+  ).join("");
+  _rebuildSectorBtns();
+  renderStocksTable();
+}
+
+function renderStocksTable() {
+  if (!DATA) return;
+  let stocks = [...DATA.stocks];
+  if (industryFilter !== "ALL") stocks = stocks.filter(s => s.industry === industryFilter);
+  if (sectorFilter   !== "ALL") stocks = stocks.filter(s => s.sector   === sectorFilter);
+  if (stockSearch) stocks = stocks.filter(s =>
+    s.symbol.toLowerCase().includes(stockSearch) ||
+    (s.name||"").toLowerCase().includes(stockSearch)
+  );
+  // แปลง bool -> number เพื่อ sort ได้
+  stocks = stocks.map(s => ({
+    ...s,
+    above_ema50_n:  s.above_ema50  === true ? 1 : s.above_ema50  === false ? 0 : null,
+    above_ema200_n: s.above_ema200 === true ? 1 : s.above_ema200 === false ? 0 : null,
+  }));
+
+  stocks.sort((a,b) => {
+    const av = a[stockSort.key], bv = b[stockSort.key];
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1; if (bv == null) return -1;
+    return (bv - av) * stockSort.dir;
+  });
+
+  document.getElementById("stocks-count").textContent = `แสดง ${stocks.length} จาก ${DATA.total} ตัว`;
+
+  // แสดงทีละ 100 แบบ lazy load
+  let stockPage = 1;
+  const PAGE_SIZE = 100;
+
+  function renderStockRows(list, page) {
+    const slice = list.slice(0, page * PAGE_SIZE);
+    document.getElementById("stocks-tbody").innerHTML = slice.map(s => `
+      <tr data-sym="${s.symbol}">
+        <td><span class="${rsColor(s.rs_score)}" style="font-weight:700">${s.rs_score??"-"}</span></td>
+        <td><strong>${s.symbol}</strong></td>
+        <td style="font-size:11px;color:var(--text2);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</td>
+        <td style="font-size:11px">${s.industry||"—"}</td>
+        <td style="font-size:11px">${s.sector||"—"}</td>
+        <td class="r">${s.price?.toFixed(2)??"—"}</td>
+        <td class="r">${pct(s.ret_1d)}</td>
+        <td class="r">${pct(s.ret_1w)}</td>
+        <td class="r">${pct(s.ret_1m)}</td>
+        <td class="r">${pct(s.ret_3m)}</td>
+        <td class="r">${pct(s.ret_ytd)}</td>
+        <td class="r"><canvas class="spark-canvas" width="60" height="24" style="display:block"></canvas></td>
+        <td class="r" style="font-size:11px">${fmtCap(s.mkt_cap, s.is_reit)}</td>
+        <td class="r" style="font-size:11px">${fmtVol(s.vol_avg20)}</td>
+        <td class="r">${emaBadge(s.above_ema50)}</td>
+        <td class="r">${emaBadge(s.above_ema200)}</td>
+      </tr>`).join("");
+    renderSparklinesInTable("stocks-tbody", window._currentStockList);
+
+    if (slice.length < list.length) {
+      document.getElementById("stocks-tbody").innerHTML +=
+        `<tr><td colspan="16" style="text-align:center;padding:14px">
+          <button onclick="loadMoreStocks()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 20px;border-radius:6px;cursor:pointer;font-size:13px">
+            โหลดเพิ่ม (${slice.length}/${list.length} ตัว)
+          </button>
+        </td></tr>`;
+    }
+  }
+
+  window._currentStockList = stocks;
+  window._stockPage = 1;
+  renderStockRows(stocks, 1);
+
+  window.loadMoreStocks = function() {
+    window._stockPage++;
+    renderStockRows(window._currentStockList, window._stockPage);
+  };
+}
+
+// ============================================================
+// WATCHLIST
+// ============================================================
+function addToWatchlist() {
+  const sym = document.getElementById("wl-input").value.trim().toUpperCase();
+  if (!sym) return;
+  if (!watchlist.includes(sym)) {
+    watchlist.push(sym);
+    localStorage.setItem("set_wl", JSON.stringify(watchlist));
+  }
+  document.getElementById("wl-input").value = "";
+  renderWatchlist();
+}
+function removeFromWatchlist(sym) {
+  watchlist = watchlist.filter(s => s !== sym);
+  localStorage.setItem("set_wl", JSON.stringify(watchlist));
+  renderWatchlist();
+}
+function renderWatchlist() {
+  if (!DATA) return;
+  const stockMap = Object.fromEntries(DATA.stocks.map(s => [s.symbol, s]));
+  if (watchlist.length === 0) {
+    document.getElementById("wl-tbody").innerHTML =
+      `<tr><td colspan="16"><div class="empty">ยังไม่มีหุ้นใน Watchlist<br>พิมพ์ Symbol แล้วกด + เพิ่ม</div></td></tr>`;
+    return;
+  }
+  document.getElementById("wl-tbody").innerHTML = watchlist.map(sym => {
+    const s = stockMap[sym];
+    if (!s) return `
+      <tr>
+        <td class="text2">—</td><td><strong>${sym}</strong></td>
+        <td colspan="13" class="text2">ไม่พบข้อมูล</td>
+        <td><button class="wl-del-btn" onclick="removeFromWatchlist('${sym}')">✕</button></td>
+      </tr>`;
+    return `
+      <tr data-sym="${s.symbol}">
+        <td><span class="${rsColor(s.rs_score)}" style="font-weight:700">${s.rs_score??"-"}</span></td>
+        <td><strong>${s.symbol}</strong></td>
+        <td style="font-size:11px;color:var(--text2);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</td>
+        <td style="font-size:11px">${s.sector||"—"}</td>
+        <td class="r">${s.price?.toFixed(2)??"—"}</td>
+        <td class="r">${pct(s.ret_1d)}</td>
+        <td class="r">${pct(s.ret_1w)}</td>
+        <td class="r">${pct(s.ret_1m)}</td>
+        <td class="r">${pct(s.ret_3m)}</td>
+        <td class="r">${pct(s.ret_ytd)}</td>
+        <td class="r">${pct(s.ret_1y)}</td>
+        <td class="r"><canvas class="spark-canvas" width="60" height="24" style="display:block"></canvas></td>
+        <td class="r" style="font-size:11px">${fmtCap(s.mkt_cap, s.is_reit)}</td>
+        <td class="r">${emaBadge(s.above_ema50)}</td>
+        <td class="r">${emaBadge(s.above_ema200)}</td>
+        <td><button class="wl-del-btn" onclick="removeFromWatchlist('${sym}')">✕</button></td>
+      </tr>`;
+  }).join("");
+  renderSparklinesInTable("wl-tbody", DATA.stocks.filter(s => watchlist.includes(s.symbol)));
+}
+
+// ============================================================
+// NAV
+// ============================================================
+function showPage(id) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("page-"+id).classList.add("active");
+  event.target.classList.add("active");
+  // Re-draw canvas charts once the page is visible and has real dimensions
+  if (id === "rotation") renderRotation();
+}
+
+
+// ============================================================
+// SECTOR ABBREVIATION MAP
+// ============================================================
+const SECTOR_ABBR = {
+  "Agribusiness":                          "AGRI",
+  "Food & Beverage":                       "FOOD",
+  "Fashion":                               "FASHION",
+  "Home & Office Products":                "HOME",
+  "Personal Products & Pharmaceuticals":   "PERSON",
+  "Banking":                               "BANK",
+  "Finance & Securities":                  "FIN",
+  "Insurance":                             "INSUR",
+  "Automotive":                            "AUTO",
+  "Industrial Materials & Machinery":      "IMM",
+  "Paper & Printing Materials":            "PAPER",
+  "Petrochemicals & Chemicals":            "PETRO",
+  "Packaging":                             "PKG",
+  "Steel and Metal Products":              "STEEL",
+  "Construction Materials":                "CONMAT",
+  "Construction Services":                 "CONS",
+  "Property Development":                  "PROP",
+  "Property Fund & REITs":                 "PF&REIT",
+  "Energy & Utilities":                    "ENERG",
+  "Commerce":                              "COMM",
+  "Health Care Services":                  "HELTH",
+  "Media & Publishing":                    "MEDIA",
+  "Professional Services":                 "PROF",
+  "Tourism & Leisure":                     "TOURISM",
+  "Transportation & Logistics":            "TRANS",
+  "Electronic Components":                 "ETRON",
+  "Information & Communication Technology":"ICT",
+  "-":                                     "—",
+  "Unknown":                               "—",
+};
+
+function openSectorModal(sectorName, nhOnly = false) {
+  if (!DATA) return;
+  const abbr = SECTOR_ABBR[sectorName] || "—";
+  let stocks = DATA.stocks
+    .filter(s => s.sector === sectorName || s.industry === sectorName);
+  if (nhOnly) stocks = stocks.filter(s => s.high_52w > 0 && s.price >= s.high_52w);
+  stocks.sort((a,b) => (b.rs_score||0)-(a.rs_score||0));
+
+  document.getElementById("modal-title").textContent = nhOnly ? `${sectorName} — New Highs` : sectorName;
+  document.getElementById("modal-abbr").textContent  = abbr;
+
+  // stats summary
+  const n = stocks.length;
+  const avg1m  = n ? (stocks.reduce((a,s)=>a+(s.ret_1m||0),0)/n).toFixed(1) : null;
+  const avg1d  = n ? (stocks.reduce((a,s)=>a+(s.ret_1d||0),0)/n).toFixed(1) : null;
+  const avgRS  = n ? Math.round(stocks.reduce((a,s)=>a+(s.rs_score||0),0)/n) : null;
+  const pctEma = n ? Math.round(stocks.filter(s=>s.above_ema50).length/n*100) : null;
+
+  document.getElementById("modal-stats").innerHTML = `
+    <div class="modal-stat"><div class="modal-stat-val">${n}</div><div class="modal-stat-lbl">หุ้น</div></div>
+    <div class="modal-stat"><div class="modal-stat-val ${avg1d>0?'green':avg1d<0?'red':''}">${avg1d!=null?(avg1d>0?'+':'')+avg1d+'%':'—'}</div><div class="modal-stat-lbl">Avg 1D</div></div>
+    <div class="modal-stat"><div class="modal-stat-val ${avg1m>0?'green':avg1m<0?'red':''}">${avg1m!=null?(avg1m>0?'+':'')+avg1m+'%':'—'}</div><div class="modal-stat-lbl">Avg 1M</div></div>
+    <div class="modal-stat"><div class="modal-stat-val ${rsColor(avgRS)}">${avgRS??'—'}</div><div class="modal-stat-lbl">Avg RS</div></div>
+    <div class="modal-stat"><div class="modal-stat-val">${pctEma??'—'}%</div><div class="modal-stat-lbl">% &gt;EMA50</div></div>
+  `;
+
+  document.getElementById("modal-tbody").innerHTML = stocks.map(s => `
+    <tr>
+      <td><span class="${rsColor(s.rs_score)}" style="font-weight:700">${s.rs_score??'—'}</span></td>
+      <td><strong>${s.symbol}</strong></td>
+      <td style="font-size:11px;color:var(--text2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</td>
+      <td class="r">${s.price?.toFixed(2)??'—'}</td>
+      <td class="r">${pct(s.ret_1d)}</td>
+      <td class="r">${pct(s.ret_1w)}</td>
+      <td class="r">${pct(s.ret_1m)}</td>
+      <td class="r">${pct(s.ret_3m)}</td>
+      <td class="r">${pct(s.ret_1y)}</td>
+      <td class="r">${emaBadge(s.above_ema50)}</td>
+      <td class="r">${emaBadge(s.above_ema200)}</td>
+    </tr>`).join("");
+
+  document.getElementById("sector-modal").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeModal() {
+  document.getElementById("sector-modal").classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+document.addEventListener("keydown", e => { if(e.key==="Escape") closeModal(); });
+
+// ============================================================
+// SCREENER
+// ============================================================
+let _scrStocks  = [];
+let _scrSortCol = 'rs_score';
+let _scrSortDir = 1; // 1 = desc (มากไปน้อย), -1 = asc (น้อยไปมาก)
+
+const _SCR_STR  = new Set(['symbol','name','sector']);
+const _SCR_BOOL = new Set(['above_ema50','above_ema200','above_ema20']);
+
+function setScrSort(col) {
+  if (_scrSortCol === col) _scrSortDir *= -1;
+  else { _scrSortCol = col; _scrSortDir = 1; }
+  renderScrTable();
+}
+
+function renderScrTable() {
+  const secRanks = computeSectorRanks();
+  const withRange = _scrStocks.map(s => {
+    const fromHigh = s.high_52w > 0 ? (s.price - s.high_52w) / s.high_52w * 100 : null;
+    const fromLow  = s.low_52w  > 0 ? (s.price - s.low_52w)  / s.low_52w  * 100 : null;
+    const sr = secRanks[s.symbol];
+    return { ...s, fromHigh, fromLow, sec_rank: sr?.rank ?? null, sec_total: sr?.total ?? null };
+  });
+  const sorted = [...withRange].sort((a, b) => {
+    const col = _scrSortCol;
+    if (_SCR_BOOL.has(col)) return ((b[col]?1:0) - (a[col]?1:0)) * _scrSortDir;
+    if (_SCR_STR.has(col))  return ((a[col]??'').localeCompare(b[col]??'')) * _scrSortDir;
+    return ((b[col]??-Infinity) - (a[col]??-Infinity)) * _scrSortDir;
+  });
+
+  function th(col, label, cls='') {
+    const active = _scrSortCol === col;
+    const arrow  = active ? (_scrSortDir === 1 ? '↓' : '↑') : '↕';
+    const c = (cls ? cls+' ' : '') + 'sortable';
+    return `<th class="${c}" onclick="setScrSort('${col}')">${label}<span class="sort-ind${active?' on':''}">${arrow}</span></th>`;
+  }
+
+  document.getElementById('screener-results').innerHTML = `
+    <div class="card"><table class="tbl">
+      <thead><tr>
+        ${th('rs_score','RS')}${th('sec_rank','Sec.Rank','r')}${th('symbol','Symbol')}${th('name','ชื่อ')}${th('sector','Sector')}
+        ${th('price','ราคา','r')}${th('ret_1d','1D%','r')}${th('ret_1m','1M%','r')}
+        ${th('ret_3m','3M%','r')}${th('ret_ytd','YTD%','r')}
+        ${th('fromHigh','% จาก High','r')}${th('fromLow','% จาก Low','r')}
+        ${th('pe','P/E','r')}${th('pbv','P/BV','r')}${th('div_yield','Div%','r')}
+        ${th('mkt_cap','MKT CAP','r')}${th('above_ema50','EMA50','r')}${th('above_ema200','EMA200','r')}
+      </tr></thead>
+      <tbody>${sorted.map(s => `
+        <tr>
+          <td><span class="${rsColor(s.rs_score)}" style="font-weight:700">${s.rs_score ?? '—'}</span></td>
+          <td class="r">${secRankHtml(s.sec_rank ? {rank:s.sec_rank,total:s.sec_total} : null)}</td>
+          <td><strong>${s.symbol}</strong></td>
+          <td style="font-size:11px;color:var(--text2);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</td>
+          <td style="font-size:11px">${s.sector || '—'}</td>
+          <td class="r">${s.price?.toFixed(2) ?? '—'}</td>
+          <td class="r">${pct(s.ret_1d)}</td>
+          <td class="r">${pct(s.ret_1m)}</td>
+          <td class="r">${pct(s.ret_3m)}</td>
+          <td class="r">${pct(s.ret_ytd)}</td>
+          <td class="r">${s.fromHigh == null ? '—' : `<span class="${s.fromHigh >= -2 ? 'green' : s.fromHigh >= -5 ? 'yellow' : 'text2'}">${s.fromHigh >= 0 ? 'NEW HIGH' : s.fromHigh.toFixed(1)+'%'}</span>`}</td>
+          <td class="r">${s.fromLow  == null ? '—' : `<span class="${s.fromLow  <= 2  ? 'red'   : s.fromLow  <= 5  ? 'yellow' : 'text2'}">${s.fromLow  <= 0.5  ? 'NEW LOW'  : s.fromLow.toFixed(1)+'%'}</span>`}</td>
+          <td class="r text2">${s.pe        != null ? s.pe.toFixed(1)        : '—'}</td>
+          <td class="r text2">${s.pbv       != null ? s.pbv.toFixed(2)       : '—'}</td>
+          <td class="r">${s.div_yield != null ? `<span class="${s.div_yield >= 5 ? 'green' : s.div_yield >= 3 ? 'yellow' : 'text2'}">${s.div_yield.toFixed(2)}%</span>` : '—'}</td>
+          <td class="r" style="font-size:11px">${fmtCap(s.mkt_cap, s.is_reit)}</td>
+          <td class="r">${emaBadge(s.above_ema50)}</td>
+          <td class="r">${emaBadge(s.above_ema200)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+}
+
+function applyPreset(name) {
+  // ล้างทุก field ก่อน
+  ['scr-rs-min','scr-1m','scr-3m','scr-1y','scr-price-min','scr-price-max',
+   'scr-cap','scr-vol','scr-from-high','scr-from-low','scr-pe','scr-pbv','scr-dy'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['scr-ema50','scr-ema200'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = false;
+  });
+
+  if (name === 'high_yield_rs') {
+    document.getElementById('scr-rs-min').value = '60';
+    document.getElementById('scr-dy').value     = '3';
+  } else if (name === 'low_pbv_reversal') {
+    document.getElementById('scr-pbv').value    = '1.5';
+    document.getElementById('scr-rs-min').value = '45';
+    document.getElementById('scr-1m').value     = '0';
+  }
+  runScreener();
+}
+
+function runScreener() {
+  if (!DATA) return;
+  const rsMin     = parseFloat(document.getElementById('scr-rs-min').value);
+  const ret1m     = parseFloat(document.getElementById('scr-1m').value);
+  const ret3m     = parseFloat(document.getElementById('scr-3m').value);
+  const ret1d     = parseFloat(document.getElementById('scr-1d').value);
+  const retYtd    = parseFloat(document.getElementById('scr-ytd').value);
+  const capMin    = parseFloat(document.getElementById('scr-cap').value) * 1e9;
+  const priceMin   = parseFloat(document.getElementById('scr-price-min').value);
+  const priceMax   = parseFloat(document.getElementById('scr-price-max').value);
+  const fromHighMax = parseFloat(document.getElementById('scr-from-high').value);
+  const fromLowMax  = parseFloat(document.getElementById('scr-from-low').value);
+  const peMax       = parseFloat(document.getElementById('scr-pe').value);
+  const pbvMax      = parseFloat(document.getElementById('scr-pbv').value);
+  const dyMin       = parseFloat(document.getElementById('scr-dy').value);
+  const ema20     = document.getElementById('scr-ema20').checked;
+  const ema50     = document.getElementById('scr-ema50').checked;
+  const ema200    = document.getElementById('scr-ema200').checked;
+  const mkt       = document.getElementById('scr-market').value;
+
+  _scrStocks = DATA.stocks.filter(s => {
+    if (!isNaN(rsMin)    && (s.rs_score  ?? -1) < rsMin)              return false;
+    if (!isNaN(ret1m)    && (s.ret_1m    ?? -Infinity) < ret1m)       return false;
+    if (!isNaN(ret3m)    && (s.ret_3m    ?? -Infinity) < ret3m)       return false;
+    if (!isNaN(ret1d)    && (s.ret_1d    ?? -Infinity) < ret1d)       return false;
+    if (!isNaN(retYtd)   && (s.ret_ytd   ?? -Infinity) < retYtd)      return false;
+    if (!isNaN(capMin)   && capMin > 0 && (!s.mkt_cap || s.mkt_cap < capMin)) return false;
+    if (!isNaN(priceMin) && (s.price ?? 0) < priceMin)                return false;
+    if (!isNaN(priceMax) && priceMax > 0 && (s.price ?? 0) > priceMax) return false;
+    if (!isNaN(fromHighMax) && fromHighMax >= 0) {
+      const fh = s.high_52w > 0 ? (s.price - s.high_52w) / s.high_52w * 100 : null;
+      if (fh == null || fh < -fromHighMax) return false;
+    }
+    if (!isNaN(fromLowMax) && fromLowMax >= 0) {
+      const fl = s.low_52w > 0 ? (s.price - s.low_52w) / s.low_52w * 100 : null;
+      if (fl == null || fl > fromLowMax) return false;
+    }
+    if (!isNaN(peMax)  && peMax  > 0 && (s.pe  == null || s.pe  > peMax))  return false;
+    if (!isNaN(pbvMax) && pbvMax > 0 && (s.pbv == null || s.pbv > pbvMax)) return false;
+    if (!isNaN(dyMin)  && dyMin  > 0 && (s.div_yield == null || s.div_yield < dyMin)) return false;
+    if (ema20  && !s.above_ema20)  return false;
+    if (ema50  && !s.above_ema50)  return false;
+    if (ema200 && !s.above_ema200) return false;
+    if (mkt !== 'ALL' && s.market !== mkt) return false;
+    return true;
+  });
+
+  // reset sort to RS desc on every new search
+  _scrSortCol = 'rs_score';
+  _scrSortDir = 1;
+
+  document.getElementById('screener-count').textContent = `พบ ${_scrStocks.length} หุ้น`;
+  if (_scrStocks.length === 0) {
+    document.getElementById('screener-results').innerHTML = '<div class="empty">ไม่พบหุ้นที่ตรงเงื่อนไข ลองปรับเงื่อนไขใหม่</div>';
+    return;
+  }
+  renderScrTable();
+}
+
+function resetScreener() {
+  ['scr-rs-min','scr-1m','scr-3m','scr-1d','scr-ytd','scr-cap','scr-price-min','scr-price-max','scr-from-high','scr-from-low','scr-pe','scr-pbv','scr-dy']
+    .forEach(id => { document.getElementById(id).value = ''; });
+  ['scr-ema20','scr-ema50','scr-ema200']
+    .forEach(id => { document.getElementById(id).checked = false; });
+  document.getElementById('scr-market').value = 'ALL';
+  document.getElementById('screener-count').textContent = '';
+  document.getElementById('screener-results').innerHTML = '<div class="empty">กำหนดเงื่อนไขแล้วกด ค้นหา</div>';
+}
+
+// ============================================================
+// 52W HIGH WATCH
+// ============================================================
+let _52wFilter = 5;
+let _52wSort = 'fromHigh';
+
+function set52WFilter(val, btn) {
+  _52wFilter = val;
+  document.querySelectorAll('#page-52w .filter-btn[onclick^="set52WFilter"]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render52W();
+}
+
+function set52WSort(val, btn) {
+  _52wSort = val;
+  document.querySelectorAll('#page-52w .filter-btn[onclick^="set52WSort"]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render52W();
+}
+
+function render52W() {
+  if (!DATA) return;
+  const stocks = DATA.stocks.map(s => {
+    const range   = (s.high_52w ?? 0) - (s.low_52w ?? 0);
+    const fromHigh = s.high_52w > 0 ? (s.price - s.high_52w) / s.high_52w * 100 : null;
+    const rangePct = range > 0 ? Math.round((s.price - s.low_52w) / range * 100) : null;
+    return { ...s, fromHigh, rangePct };
+  }).filter(s => s.fromHigh != null && s.fromHigh >= -_52wFilter)
+    .sort((a, b) => {
+      if (_52wSort === 'rs_desc') return (b.rs_score ?? -1) - (a.rs_score ?? -1);
+      if (_52wSort === 'rs_asc')  return (a.rs_score ?? 100) - (b.rs_score ?? 100);
+      return b.fromHigh - a.fromHigh;
+    });
+
+  const rangeLabel = _52wFilter >= 100 ? 'ทั้งหมด' : `ภายใน ${_52wFilter}% จาก 52W High`;
+  document.getElementById('52w-count').textContent = `${stocks.length} หุ้น — ${rangeLabel}`;
+  document.getElementById('52w-tbody').innerHTML = stocks.map(s => `
+    <tr>
+      <td><span class="${rsColor(s.rs_score)}" style="font-weight:700">${s.rs_score ?? '—'}</span></td>
+      <td><strong>${s.symbol}</strong></td>
+      <td style="font-size:11px;color:var(--text2);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</td>
+      <td class="r">${s.price?.toFixed(2) ?? '—'}</td>
+      <td class="r text2">${s.high_52w?.toFixed(2) ?? '—'}</td>
+      <td class="r"><span class="${s.fromHigh >= -2 ? 'green' : s.fromHigh >= -5 ? 'yellow' : 'text2'}">${s.fromHigh >= 0 ? 'NEW HIGH' : s.fromHigh.toFixed(1) + '%'}</span></td>
+      <td>
+        <div class="range-bar-wrap">
+          <div class="range-bar-track"><div class="range-bar-fill" style="width:${s.rangePct ?? 0}%"></div></div>
+          <div style="font-size:10px;color:var(--text2);text-align:right">${s.rangePct ?? '—'}%</div>
+        </div>
+      </td>
+      <td class="r">${pct(s.ret_1m)}</td>
+      <td class="r">${pct(s.ret_3m)}</td>
+      <td class="r">${emaBadge(s.above_ema50)}</td>
+      <td class="r">${emaBadge(s.above_ema200)}</td>
+    </tr>`).join('');
+}
+
+// ============================================================
+// 52W LOW WATCH
+// ============================================================
+let _52wlFilter = 5;
+let _52wlSortCol = 'fromLow', _52wlSortDir = -1; // ascending by default: closest to low first
+
+const _52WL_STR  = new Set(['symbol','name','sector']);
+const _52WL_BOOL = new Set(['above_ema50','above_ema200']);
+
+function set52WLFilter(val, btn) {
+  _52wlFilter = val;
+  document.querySelectorAll('#page-52w-low .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render52WLow();
+}
+
+function set52WLSort(col) {
+  if (_52wlSortCol === col) _52wlSortDir *= -1;
+  else { _52wlSortCol = col; _52wlSortDir = 1; }
+  render52WLow();
+}
+
+function wlTh(col, label, cls='') {
+  const active = _52wlSortCol === col;
+  const arrow  = active ? (_52wlSortDir === 1 ? '↓' : '↑') : '↕';
+  const c = (cls ? cls+' ' : '') + 'sortable';
+  return `<th class="${c}" onclick="set52WLSort('${col}')">${label}<span class="sort-ind${active?' on':''}">${arrow}</span></th>`;
+}
+
+function render52WLow() {
+  if (!DATA) return;
+  const stocks = DATA.stocks.map(s => {
+    const fromLow  = s.low_52w > 0 ? (s.price - s.low_52w) / s.low_52w * 100 : null;
+    const range    = (s.high_52w ?? 0) - (s.low_52w ?? 0);
+    const rangePct = range > 0 ? Math.round((s.price - s.low_52w) / range * 100) : null;
+    return { ...s, fromLow, rangePct };
+  }).filter(s => {
+    if (s.fromLow == null) return false;
+    if (_52wlFilter < 100 && s.fromLow > _52wlFilter) return false;
+    return true;
+  }).sort((a, b) => {
+    const col = _52wlSortCol;
+    if (_52WL_BOOL.has(col)) return ((b[col]?1:0) - (a[col]?1:0)) * _52wlSortDir;
+    if (_52WL_STR.has(col))  return ((a[col]??'').localeCompare(b[col]??'')) * _52wlSortDir;
+    return ((b[col]??-Infinity) - (a[col]??-Infinity)) * _52wlSortDir;
+  });
+
+  const rangeLabel = _52wlFilter >= 100 ? 'ทั้งหมด' : `ภายใน ${_52wlFilter}% จาก 52W Low`;
+  document.getElementById('52wl-count').textContent = `${stocks.length} หุ้น — ${rangeLabel}`;
+  document.getElementById('52wl-thead').innerHTML = `<tr>
+    ${wlTh('rs_score','RS')}${wlTh('symbol','Symbol')}${wlTh('name','ชื่อ')}${wlTh('sector','Sector')}
+    ${wlTh('price','ราคา','r')}${wlTh('low_52w','52W Low','r')}${wlTh('fromLow','% จาก Low','r')}
+    <th>Range</th>
+    ${wlTh('ret_1d','1D%','r')}${wlTh('ret_1w','1W%','r')}${wlTh('ret_1m','1M%','r')}${wlTh('ret_3m','3M%','r')}
+    ${wlTh('mkt_cap','MKT CAP','r')}${wlTh('above_ema50','EMA50','r')}${wlTh('above_ema200','EMA200','r')}
+  </tr>`;
+  document.getElementById('52wl-tbody').innerHTML = stocks.map(s => `
+    <tr>
+      <td><span class="${rsColor(s.rs_score)}" style="font-weight:700">${s.rs_score ?? '—'}</span></td>
+      <td><strong>${s.symbol}</strong></td>
+      <td style="font-size:11px;color:var(--text2);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</td>
+      <td style="font-size:11px">${s.sector || '—'}</td>
+      <td class="r">${s.price?.toFixed(2) ?? '—'}</td>
+      <td class="r text2">${s.low_52w?.toFixed(2) ?? '—'}</td>
+      <td class="r"><span class="${s.fromLow <= 2 ? 'red' : s.fromLow <= 5 ? 'yellow' : 'text2'}">${s.fromLow <= 0.5 ? 'NEW LOW' : s.fromLow.toFixed(1) + '%'}</span></td>
+      <td>
+        <div class="range-bar-wrap">
+          <div class="range-bar-track"><div class="range-bar-fill" style="width:${s.rangePct ?? 0}%"></div></div>
+          <div style="font-size:10px;color:var(--text2);text-align:right">${s.rangePct ?? '—'}%</div>
+        </div>
+      </td>
+      <td class="r">${pct(s.ret_1d)}</td>
+      <td class="r">${pct(s.ret_1w)}</td>
+      <td class="r">${pct(s.ret_1m)}</td>
+      <td class="r">${pct(s.ret_3m)}</td>
+      <td class="r" style="font-size:11px">${fmtCap(s.mkt_cap, s.is_reit)}</td>
+      <td class="r">${emaBadge(s.above_ema50)}</td>
+      <td class="r">${emaBadge(s.above_ema200)}</td>
+    </tr>`).join('');
+}
+
+// ============================================================
+// HEATMAP
+// ============================================================
+let hmPeriod = 'ret_1d';
+
+function setHmPeriod(key, btn) {
+  hmPeriod = key;
+  document.querySelectorAll('#page-heatmap .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderHeatmap();
+}
+
+function _heatColor(v) {
+  if (v == null) return '#21262d';
+  const cap = 15;
+  const t = Math.min(Math.abs(v) / cap, 1);
+  if (v >= 0) return `rgba(63,185,80,${0.15 + t * 0.85})`;
+  return `rgba(248,81,73,${0.15 + t * 0.85})`;
+}
+
+function renderHeatmap() {
+  if (!DATA) return;
+  const groups = {};
+  DATA.stocks.forEach(s => {
+    const sec = s.sector || 'Unknown';
+    if (!groups[sec]) groups[sec] = [];
+    groups[sec].push(s);
+  });
+
+  const sectorList = Object.entries(groups).sort((a, b) => {
+    const avg = arr => arr.reduce((s, x) => s + (x[hmPeriod] ?? 0), 0) / arr.length;
+    return avg(b[1]) - avg(a[1]);
+  });
+
+  document.getElementById('heatmap-grid').innerHTML = sectorList.map(([sec, stocks]) => {
+    const sorted = [...stocks].sort((a, b) => (b[hmPeriod] ?? -999) - (a[hmPeriod] ?? -999));
+    const avg = sorted.reduce((s, x) => s + (x[hmPeriod] ?? 0), 0) / sorted.length;
+    const cells = sorted.map(s => {
+      const v   = s[hmPeriod];
+      const bg  = _heatColor(v);
+      const txt = Math.abs(v ?? 0) > 6 ? '#fff' : 'var(--text)';
+      const lbl = v != null ? (v > 0 ? '+' : '') + v.toFixed(1) + '%' : '—';
+      return `<div class="hm-cell" style="background:${bg};color:${txt}" title="${s.symbol} ${lbl}">${s.symbol.slice(0,5)}</div>`;
+    }).join('');
+    return `
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;display:flex;align-items:center;gap:8px">
+          ${sec}
+          <span class="${avg >= 0 ? 'green' : 'red'}">${avg > 0 ? '+' : ''}${avg.toFixed(1)}%</span>
+          <span class="text2" style="font-size:10px">${stocks.length} หุ้น</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:2px">${cells}</div>
+      </div>`;
+  }).join('');
+}
+
+// ============================================================
+// EMA BREADTH BY SECTOR
+// ============================================================
+let emaBreadthView = 'sector';
+
+function setEMABreadthView(v, btn) {
+  emaBreadthView = v;
+  document.querySelectorAll('#page-ema-breadth .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderEMABreadth();
+}
+
+function renderEMABreadth() {
+  if (!DATA) return;
+  const key = emaBreadthView;
+  const groups = {};
+  DATA.stocks.forEach(s => {
+    const g = s[key] || 'Unknown';
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(s);
+  });
+
+  const rows = Object.entries(groups).map(([name, stocks]) => {
+    const n    = stocks.length;
+    const p20  = Math.round(stocks.filter(s => s.above_ema20  === true).length / n * 100);
+    const p50  = Math.round(stocks.filter(s => s.above_ema50  === true).length / n * 100);
+    const p200 = Math.round(stocks.filter(s => s.above_ema200 === true).length / n * 100);
+    const score = Math.round((p20 + p50 + p200) / 3);
+    return { name, n, p20, p50, p200, score };
+  }).sort((a, b) => b.score - a.score);
+
+  const bar = (v) => {
+    const c = v >= 60 ? 'var(--green)' : v >= 40 ? 'var(--yellow)' : 'var(--red)';
+    const tc = v >= 60 ? 'green' : v >= 40 ? 'yellow' : 'red';
+    return `<div style="display:flex;align-items:center;gap:6px">
+      <div style="flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
+        <div style="width:${v}%;height:100%;background:${c};border-radius:3px"></div>
+      </div>
+      <span class="${tc}" style="width:38px;text-align:right;font-size:12px;font-weight:600">${v}%</span>
+    </div>`;
+  };
+
+  document.getElementById('ema-breadth-tbody').innerHTML = rows.map((r, i) => `
+    <tr>
+      <td class="text2">${i + 1}</td>
+      <td><strong>${r.name}</strong></td>
+      <td class="r text2">${r.n}</td>
+      <td style="min-width:140px;padding-right:12px">${bar(r.p20)}</td>
+      <td style="min-width:140px;padding-right:12px">${bar(r.p50)}</td>
+      <td style="min-width:140px;padding-right:12px">${bar(r.p200)}</td>
+      <td class="r"><span class="${rsColor(r.score)}" style="font-weight:700">${r.score}</span></td>
+    </tr>`).join('');
+}
+
+// ============================================================
+// ============================================================
+// BREAKOUT RADAR
+// ============================================================
+let _boRS = 70, _boDist = 10, _boEMA = '50';
+let _boSortCol = 'rs_score', _boSortDir = 1;
+
+const _BO_STR  = new Set(['symbol','name','sector']);
+const _BO_BOOL = new Set(['above_ema50','above_ema200']);
+
+function setBoSort(col) {
+  if (_boSortCol === col) _boSortDir *= -1;
+  else { _boSortCol = col; _boSortDir = 1; }
+  renderBreakout();
+}
+
+function boTh(col, label, cls='') {
+  const active = _boSortCol === col;
+  const arrow  = active ? (_boSortDir === 1 ? '↓' : '↑') : '↕';
+  const c = (cls ? cls+' ' : '') + 'sortable';
+  return `<th class="${c}" onclick="setBoSort('${col}')">${label}<span class="sort-ind${active?' on':''}">${arrow}</span></th>`;
+}
+
+function setBO(type, val, btn) {
+  if (type === 'rs')   _boRS   = val;
+  if (type === 'dist') _boDist = val;
+  if (type === 'ema')  _boEMA  = val;
+  document.querySelectorAll(`#page-breakout .filter-btn[id^="bo-${type}"]`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBreakout();
+}
+
+function renderBreakout() {
+  if (!DATA) return;
+  const secRanks = computeSectorRanks();
+  const stocks = DATA.stocks.map(s => {
+    const fromHigh = s.high_52w > 0 ? (s.price - s.high_52w) / s.high_52w * 100 : null;
+    const range    = (s.high_52w ?? 0) - (s.low_52w ?? 0);
+    const rangePct = range > 0 ? Math.round((s.price - s.low_52w) / range * 100) : null;
+    const sr = secRanks[s.symbol];
+    return { ...s, fromHigh, rangePct, sec_rank: sr?.rank ?? null, sec_total: sr?.total ?? null };
+  }).filter(s => {
+    if (s.fromHigh == null) return false;
+    if ((s.rs_score ?? 0) < _boRS) return false;
+    if (s.fromHigh < -_boDist) return false;
+    if (_boEMA === '50'  && !s.above_ema50)  return false;
+    if (_boEMA === '200' && (!s.above_ema50 || !s.above_ema200)) return false;
+    return true;
+  }).sort((a, b) => {
+    const col = _boSortCol;
+    if (_BO_BOOL.has(col)) return ((b[col]?1:0) - (a[col]?1:0)) * _boSortDir;
+    if (_BO_STR.has(col))  return ((a[col]??'').localeCompare(b[col]??'')) * _boSortDir;
+    return ((b[col]??-Infinity) - (a[col]??-Infinity)) * _boSortDir;
+  });
+
+  document.getElementById('bo-count').textContent = `${stocks.length} หุ้น — RS ≥ ${_boRS} · ห่าง High ≤ ${_boDist}%`;
+  document.getElementById('bo-thead').innerHTML = `<tr>
+    ${boTh('rs_score','RS')}${boTh('sec_rank','Sec.Rank','r')}${boTh('symbol','Symbol')}${boTh('name','ชื่อ')}${boTh('sector','Sector')}
+    ${boTh('price','ราคา','r')}${boTh('high_52w','52W High','r')}${boTh('fromHigh','% จาก High','r')}
+    <th>Range</th>
+    ${boTh('ret_1m','1M%','r')}${boTh('ret_3m','3M%','r')}${boTh('ret_ytd','YTD%','r')}
+    ${boTh('mkt_cap','MKT CAP','r')}${boTh('above_ema50','EMA50','r')}${boTh('above_ema200','EMA200','r')}
+  </tr>`;
+  document.getElementById('bo-tbody').innerHTML = stocks.map(s => `
+    <tr>
+      <td><span class="${rsColor(s.rs_score)}" style="font-weight:700">${s.rs_score ?? '—'}</span></td>
+      <td class="r">${secRankHtml(s.sec_rank ? {rank:s.sec_rank,total:s.sec_total} : null)}</td>
+      <td><strong>${s.symbol}</strong></td>
+      <td style="font-size:11px;color:var(--text2);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</td>
+      <td style="font-size:11px">${s.sector || '—'}</td>
+      <td class="r">${s.price?.toFixed(2) ?? '—'}</td>
+      <td class="r text2">${s.high_52w?.toFixed(2) ?? '—'}</td>
+      <td class="r"><span class="${s.fromHigh >= -2 ? 'green' : s.fromHigh >= -5 ? 'yellow' : 'text2'}">${s.fromHigh >= 0 ? 'NEW HIGH' : s.fromHigh.toFixed(1) + '%'}</span></td>
+      <td>
+        <div class="range-bar-wrap">
+          <div class="range-bar-track"><div class="range-bar-fill" style="width:${s.rangePct ?? 0}%"></div></div>
+          <div style="font-size:10px;color:var(--text2);text-align:right">${s.rangePct ?? '—'}%</div>
+        </div>
+      </td>
+      <td class="r">${pct(s.ret_1m)}</td>
+      <td class="r">${pct(s.ret_3m)}</td>
+      <td class="r">${pct(s.ret_ytd)}</td>
+      <td class="r" style="font-size:11px">${fmtCap(s.mkt_cap, s.is_reit)}</td>
+      <td class="r">${emaBadge(s.above_ema50)}</td>
+      <td class="r">${emaBadge(s.above_ema200)}</td>
+    </tr>`).join('');
+}
+
+// ============================================================
+// MOMENTUM ALIGNMENT
+// ============================================================
+let _momFilter = 'all4';
+let _momSortCol = 'rs_score', _momSortDir = 1;
+
+const _MOM_STR  = new Set(['symbol','name','sector']);
+const _MOM_BOOL = new Set(['above_ema50','above_ema200']);
+
+function setMomSort(col) {
+  if (_momSortCol === col) _momSortDir *= -1;
+  else { _momSortCol = col; _momSortDir = 1; }
+  renderMomentum();
+}
+
+function momTh(col, label, cls='') {
+  const active = _momSortCol === col;
+  const arrow  = active ? (_momSortDir === 1 ? '↓' : '↑') : '↕';
+  const c = (cls ? cls+' ' : '') + 'sortable';
+  return `<th class="${c}" onclick="setMomSort('${col}')">${label}<span class="sort-ind${active?' on':''}">${arrow}</span></th>`;
+}
+
+function setMomFilter(val, btn) {
+  _momFilter = val;
+  document.querySelectorAll('#page-momentum .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMomentum();
+}
+
+function renderMomentum() {
+  if (!DATA) return;
+  const secRanks = computeSectorRanks();
+  const stocks = DATA.stocks.filter(s => {
+    if (_momFilter === 'all4') return (s.ret_1d ?? -1) > 0 && (s.ret_1w ?? -1) > 0 && (s.ret_1m ?? -1) > 0 && (s.ret_3m ?? -1) > 0;
+    if (_momFilter === '3tf')  return (s.ret_1w ?? -1) > 0 && (s.ret_1m ?? -1) > 0 && (s.ret_3m ?? -1) > 0;
+    if (_momFilter === '2tf')  return (s.ret_1m ?? -1) > 0 && (s.ret_3m ?? -1) > 0;
+    return true;
+  }).sort((a, b) => {
+    const col = _momSortCol;
+    if (_MOM_BOOL.has(col)) return ((b[col]?1:0) - (a[col]?1:0)) * _momSortDir;
+    if (_MOM_STR.has(col))  return ((a[col]??'').localeCompare(b[col]??'')) * _momSortDir;
+    return ((b[col]??-Infinity) - (a[col]??-Infinity)) * _momSortDir;
+  });
+
+  const tfLabel = { all4: 'ทุก 4 Timeframe (1D·1W·1M·3M)', '3tf': '3 Timeframe (1W·1M·3M)', '2tf': '2 Timeframe (1M·3M)' };
+  document.getElementById('mom-count').textContent = `${stocks.length} หุ้น — ${tfLabel[_momFilter]}`;
+  document.getElementById('mom-thead').innerHTML = `<tr>
+    ${momTh('rs_score','RS')}${momTh('sec_rank','Sec.Rank','r')}${momTh('symbol','Symbol')}${momTh('name','ชื่อ')}${momTh('sector','Sector')}
+    ${momTh('price','ราคา','r')}
+    ${momTh('ret_1d','1D%','r')}${momTh('ret_1w','1W%','r')}${momTh('ret_1m','1M%','r')}${momTh('ret_3m','3M%','r')}${momTh('ret_ytd','YTD%','r')}
+    ${momTh('mkt_cap','MKT CAP','r')}${momTh('above_ema50','EMA50','r')}${momTh('above_ema200','EMA200','r')}
+  </tr>`;
+  document.getElementById('mom-tbody').innerHTML = stocks.map(s => {
+    const sr = secRanks[s.symbol];
+    return `
+    <tr>
+      <td><span class="${rsColor(s.rs_score)}" style="font-weight:700">${s.rs_score ?? '—'}</span></td>
+      <td class="r">${secRankHtml(sr)}</td>
+      <td><strong>${s.symbol}</strong></td>
+      <td style="font-size:11px;color:var(--text2);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</td>
+      <td style="font-size:11px">${s.sector || '—'}</td>
+      <td class="r">${s.price?.toFixed(2) ?? '—'}</td>
+      <td class="r">${pct(s.ret_1d)}</td>
+      <td class="r">${pct(s.ret_1w)}</td>
+      <td class="r">${pct(s.ret_1m)}</td>
+      <td class="r">${pct(s.ret_3m)}</td>
+      <td class="r">${pct(s.ret_ytd)}</td>
+      <td class="r" style="font-size:11px">${fmtCap(s.mkt_cap, s.is_reit)}</td>
+      <td class="r">${emaBadge(s.above_ema50)}</td>
+      <td class="r">${emaBadge(s.above_ema200)}</td>
+    </tr>`}).join('');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+loadData();
+</script>
+
+<!-- SECTOR DETAIL MODAL -->
+<div class="modal-overlay" id="sector-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">—</div>
+      <div class="modal-abbr" id="modal-abbr">—</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-stats" id="modal-stats"></div>
+    <div class="modal-body">
+      <table class="tbl tbl-clickable" style="width:100%">
+        <thead><tr>
+          <th>RS</th><th>Symbol</th><th>ชื่อ</th>
+          <th class="r">ราคา</th><th class="r">1D%</th><th class="r">1W%</th>
+          <th class="r">1M%</th><th class="r">3M%</th><th class="r">1Y%</th>
+          <th class="r">EMA50</th><th class="r">EMA200</th>
+        </tr></thead>
+        <tbody id="modal-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>

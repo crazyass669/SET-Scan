@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คู่มือการใช้งาน SET Dashboard</title>
+<style>
+  :root {
+    --bg: #f6f8fa;
+    --bg2: #ffffff;
+    --border: #d0d7de;
+    --text: #1f2328;
+    --text2: #656d76;
+    --green: #1a7f37;
+    --green-bg: #dafbe1;
+    --red: #cf222e;
+    --red-bg: #ffebe9;
+    --yellow: #9a6700;
+    --yellow-bg: #fff8c5;
+    --blue: #0969da;
+    --blue-bg: #ddf4ff;
+    --purple: #6e40c9;
+    --purple-bg: #fbefff;
+    --accent: #0969da;
+    --sidebar-w: 260px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; line-height: 1.7; }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    width: var(--sidebar-w);
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    z-index: 100;
+    padding: 0 0 32px 0;
+  }
+  .sidebar-header {
+    padding: 20px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: var(--bg2);
+  }
+  .sidebar-header h2 { font-size: 15px; font-weight: 700; color: var(--text); }
+  .sidebar-header p { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .sidebar-section { padding: 12px 12px 4px; font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; }
+  .sidebar a {
+    display: block; padding: 6px 20px; font-size: 13px; color: var(--text2);
+    text-decoration: none; border-radius: 6px; margin: 1px 8px;
+    transition: all .15s;
+  }
+  .sidebar a:hover { background: var(--bg); color: var(--text); }
+  .sidebar a.active { background: #e8f0fe; color: var(--accent); font-weight: 600; }
+
+  /* MAIN */
+  .main { margin-left: var(--sidebar-w); padding: 40px 48px; max-width: calc(var(--sidebar-w) + 900px); }
+
+  /* SECTIONS */
+  .section { margin-bottom: 56px; scroll-margin-top: 24px; }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  h2 { font-size: 20px; font-weight: 700; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+  h3 { font-size: 15px; font-weight: 700; margin: 24px 0 8px; color: var(--accent); }
+  h4 { font-size: 13px; font-weight: 700; margin: 16px 0 6px; }
+  p { margin-bottom: 12px; color: var(--text); }
+
+  /* PAGE BADGE */
+  .page-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--blue-bg); color: var(--blue);
+    border: 1px solid #b6d4f5; border-radius: 6px;
+    padding: 4px 12px; font-size: 12px; font-weight: 700;
+    margin-bottom: 16px; letter-spacing: .03em;
+  }
+
+  /* TERM BOX */
+  .term-box {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px 20px; margin-bottom: 12px;
+  }
+  .term-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .term-desc { color: var(--text2); font-size: 13px; line-height: 1.6; }
+
+  /* CALLOUT */
+  .callout {
+    border-radius: 8px; padding: 14px 18px; margin: 16px 0;
+    font-size: 13px; border-left: 4px solid;
+  }
+  .callout.tip    { background: var(--green-bg);  border-color: var(--green);  color: #1a3a1a; }
+  .callout.note   { background: var(--blue-bg);   border-color: var(--blue);   color: #0a2a4a; }
+  .callout.warn   { background: var(--yellow-bg); border-color: var(--yellow); color: #3a2a00; }
+  .callout.info   { background: var(--purple-bg); border-color: var(--purple); color: #2a1a4a; }
+  .callout strong { font-weight: 700; }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+  th { background: var(--bg); padding: 10px 14px; text-align: left; font-weight: 700; font-size: 12px; border: 1px solid var(--border); color: var(--text2); }
+  td { padding: 9px 14px; border: 1px solid var(--border); vertical-align: top; }
+  tr:nth-child(even) td { background: #fafbfc; }
+
+  /* COLOR CHIPS */
+  .chip {
+    display: inline-block; padding: 2px 9px; border-radius: 4px;
+    font-size: 12px; font-weight: 700; white-space: nowrap;
+  }
+  .chip-green  { background: var(--green-bg);  color: var(--green); }
+  .chip-red    { background: var(--red-bg);    color: var(--red); }
+  .chip-yellow { background: var(--yellow-bg); color: var(--yellow); }
+  .chip-blue   { background: var(--blue-bg);   color: var(--blue); }
+  .chip-gray   { background: var(--bg);        color: var(--text2); }
+
+  /* STEP */
+  .steps { counter-reset: step; }
+  .step { display: flex; gap: 16px; margin-bottom: 20px; }
+  .step-num {
+    counter-increment: step;
+    min-width: 32px; height: 32px;
+    background: var(--accent); color: #fff;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; flex-shrink: 0; margin-top: 2px;
+  }
+  .step-body h4 { margin-top: 0; margin-bottom: 4px; }
+
+  /* DIVIDER */
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #0d1117 0%, #1b2131 100%);
+    color: #e6edf3; border-radius: 12px; padding: 32px 36px;
+    margin-bottom: 40px;
+  }
+  .hero h1 { color: #fff; font-size: 26px; margin-bottom: 8px; }
+  .hero p { color: #8b949e; margin: 0; }
+  .hero .tags { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .hero .tag {
+    background: rgba(88,166,255,.15); color: #58a6ff;
+    border: 1px solid rgba(88,166,255,.3);
+    border-radius: 20px; padding: 4px 12px; font-size: 12px;
+  }
+
+  /* FORMULA BOX */
+  .formula {
+    background: #1b2131; color: #79c0ff; border-radius: 8px;
+    padding: 14px 18px; font-family: 'Consolas', monospace; font-size: 13px;
+    margin: 12px 0; border: 1px solid #30363d;
+  }
+
+  /* SCREENSHOT PLACEHOLDER */
+  .screen-mock {
+    background: #0d1117; border: 1px solid #30363d; border-radius: 8px;
+    padding: 20px; margin: 16px 0; color: #8b949e; font-size: 12px;
+  }
+  .screen-mock .bar { height: 8px; background: #21262d; border-radius: 4px; margin: 6px 0; }
+  .screen-mock .bar.w30 { width: 30%; } .screen-mock .bar.w50 { width: 50%; }
+  .screen-mock .bar.w70 { width: 70%; } .screen-mock .bar.w90 { width: 90%; }
+  .screen-mock .bar.green { background: #1a4a23; }
+  .screen-mock .bar.red   { background: #4a1a1a; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <h2>📊 SET Dashboard</h2>
+    <p>คู่มือการใช้งานฉบับสมบูรณ์</p>
+  </div>
+
+  <div class="sidebar-section">เริ่มต้น</div>
+  <a href="#intro">ทำความรู้จักโปรแกรม</a>
+  <a href="#start">วิธีเปิดใช้งาน</a>
+  <a href="#refresh">การอัปเดตข้อมูล</a>
+  <a href="#concepts">คำศัพท์สำคัญ</a>
+
+  <div class="sidebar-section">หน้าหลัก</div>
+  <a href="#overview">Overview — ภาพรวมตลาด</a>
+  <a href="#rotation">Rotation — หมุนเวียนกลุ่ม</a>
+  <a href="#rs-leaders">RS 80+ — หุ้น RS สูง</a>
+  <a href="#sectors">Sectors — รายกลุ่มอุตสาหกรรม</a>
+  <a href="#stocks">หุ้นทั้งหมด</a>
+
+  <div class="sidebar-section">ค้นหาหุ้น</div>
+  <a href="#screener">Screener — กรองหุ้น</a>
+  <a href="#52w-high">52W High — ทำ New High</a>
+  <a href="#52w-low">52W Low — ใกล้จุดต่ำสุด</a>
+
+  <div class="sidebar-section">วิเคราะห์</div>
+  <a href="#breakout">Breakout</a>
+  <a href="#momentum">Momentum Alignment</a>
+  <a href="#heatmap">Heatmap</a>
+  <a href="#ema-breadth">EMA Breadth</a>
+  <a href="#watchlist">Watchlist</a>
+
+  <div class="sidebar-section">กลยุทธ์</div>
+  <a href="#strategy-breakout">กลยุทธ์ Breakout</a>
+  <a href="#strategy-yield">กลยุทธ์ High Yield</a>
+  <a href="#strategy-value">กลยุทธ์ Value + กลับตัว</a>
+  <a href="#strategy-rotation">กลยุทธ์ Sector Rotation</a>
+  <a href="#screener-examples">ตัวอย่าง Screener</a>
+
+  <div class="sidebar-section">เพิ่มเติม</div>
+  <a href="#reading-tables">การอ่านตาราง</a>
+  <a href="#tips">เคล็ดลับการใช้งาน</a>
+  <a href="#faq">คำถามที่พบบ่อย</a>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>SET Dashboard</h1>
+    <p>เครื่องมือวิเคราะห์หุ้นตลาดหลักทรัพย์แห่งประเทศไทย (SET)<br>ครอบคลุมหุ้นกว่า 900 ตัว อัปเดตได้ทุกวัน</p>
+    <div class="tags">
+      <span class="tag">RS Score</span>
+      <span class="tag">Sector Analysis</span>
+      <span class="tag">52W High/Low</span>
+      <span class="tag">Breakout Scanner</span>
+      <span class="tag">Stock Screener</span>
+      <span class="tag">EMA Trend</span>
+    </div>
+  </div>
+
+  <!-- ===== INTRO ===== -->
+  <div class="section" id="intro">
+    <h2>ทำความรู้จักโปรแกรม</h2>
+    <p>SET Dashboard คือโปรแกรมสำหรับ <strong>วิเคราะห์ภาพรวมตลาดหุ้นไทย</strong> ช่วยให้คุณเห็นข้อมูลสำคัญในหน้าเดียว ไม่ว่าจะเป็น:</p>
+    <ul style="margin: 12px 0 12px 24px; color: var(--text2);">
+      <li style="margin-bottom:6px">ภาพรวมตลาด — กี่ % ของหุ้นทั้งหมดกำลังขึ้น</li>
+      <li style="margin-bottom:6px">กลุ่มอุตสาหกรรมไหนแข็งแกร่งที่สุด</li>
+      <li style="margin-bottom:6px">หุ้นที่กำลัง Breakout หรือทำ New High</li>
+      <li style="margin-bottom:6px">กรองหุ้นตามเงื่อนไขที่กำหนดเอง</li>
+      <li style="margin-bottom:6px">ติดตามหุ้นที่สนใจใน Watchlist</li>
+    </ul>
+    <div class="callout note">
+      <strong>โปรแกรมนี้เหมาะสำหรับ:</strong> นักลงทุนที่ต้องการ Top-Down Analysis — มองภาพใหญ่ก่อน แล้วค่อยลงมาหาหุ้นเดี่ยว
+    </div>
+  </div>
+
+  <!-- ===== START ===== -->
+  <div class="section" id="start">
+    <h2>วิธีเปิดใช้งาน</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>ดับเบิ้ลคลิกที่ <code>start.bat</code></h4>
+          <p>อยู่ในโฟลเดอร์ SET_Dashboard จะมีหน้าต่างสีดำ (Terminal) เปิดขึ้นมา — <strong>อย่าปิดหน้าต่างนี้</strong> ขณะใช้งาน</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>Browser จะเปิดขึ้นอัตโนมัติ</h4>
+          <p>ที่ <code>http://localhost:5000</code> — ถ้าไม่เปิดอัตโนมัติ พิมพ์ที่อยู่นี้ใน Chrome/Edge ได้เลย</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>กด Refresh เพื่อดึงข้อมูล</h4>
+          <p>ครั้งแรกรอประมาณ <strong>5–10 นาที</strong> ข้อมูลจะแสดงครบทุกหน้า</p>
+        </div>
+      </div>
+    </div>
+    <div class="callout warn">
+      <strong>สำคัญ:</strong> หน้าต่างสีดำ (Terminal) ต้องเปิดทิ้งไว้ตลอดเวลาที่ใช้งาน ถ้าปิดแล้วเว็บจะใช้ไม่ได้
+    </div>
+  </div>
+
+  <!-- ===== REFRESH ===== -->
+  <div class="section" id="refresh">
+    <h2>การอัปเดตข้อมูล (Refresh)</h2>
+    <p>ข้อมูลในโปรแกรมไม่ได้อัปเดตอัตโนมัติ ต้องกด <strong>⟳ Refresh</strong> มุมบนขวาด้วยตัวเอง</p>
+
+    <h3>ช่วงเวลาแนะนำ</h3>
+    <table>
+      <tr><th>ช่วงเวลา</th><th>สถานะ</th><th>คำแนะนำ</th></tr>
+      <tr><td>17:30 – 23:59 น.</td><td><span class="chip chip-green">ดีที่สุด</span></td><td>Yahoo Finance sync ข้อมูล EOD เสร็จแล้ว</td></tr>
+      <tr><td>08:00 – 09:29 น.</td><td><span class="chip chip-green">ดี</span></td><td>ก่อนตลาดเปิด ข้อมูลเมื่อวานครบถ้วน</td></tr>
+      <tr><td>14:30 – 17:29 น.</td><td><span class="chip chip-yellow">หลีกเลี่ยง</span></td><td>Yahoo กำลัง sync อาจเจอ error บ่อย</td></tr>
+    </table>
+
+    <h3>ระหว่าง Refresh</h3>
+    <p>จะมีกล่อง Progress แสดงขั้นตอน เช่น "กำลังดาวน์โหลด batch 1/10" รอจนขึ้น "เสร็จแล้ว!" แล้วข้อมูลจะโหลดใหม่อัตโนมัติ</p>
+
+    <div class="callout tip">
+      <strong>เคล็ดลับ:</strong> ถ้า Refresh แล้ว error ไม่ต้องตกใจ — ข้อมูลเดิมจะยังแสดงอยู่ รอ 30 นาทีแล้วลองใหม่
+    </div>
+  </div>
+
+  <!-- ===== CONCEPTS ===== -->
+  <div class="section" id="concepts">
+    <h2>คำศัพท์สำคัญ</h2>
+    <p>ก่อนใช้งานควรทำความเข้าใจคำศัพท์พื้นฐานเหล่านี้ก่อนครับ</p>
+
+    <div class="term-box">
+      <div class="term-name">RS Score (Relative Strength Score)</div>
+      <div class="term-desc">
+        คะแนน 0–99 วัดว่าหุ้นตัวนี้ <strong>แข็งแกร่งกว่าตลาดแค่ไหน</strong> คำนวณจากผลตอบแทนย้อนหลังหลายช่วงเวลาเทียบกับหุ้นทั้งหมดใน SET<br><br>
+        <span class="chip chip-green">80–99</span> แข็งแกร่งมาก (Top 20% ของตลาด) &nbsp;
+        <span class="chip chip-yellow">50–79</span> ปานกลาง &nbsp;
+        <span class="chip chip-red">0–49</span> อ่อนแอกว่าตลาด
+      </div>
+    </div>
+    <div class="formula">RS Score = Rank percentile ของ (1M×2 + 3M×1 + 6M×1 + 1Y×1)</div>
+
+    <div class="term-box">
+      <div class="term-name">EMA (Exponential Moving Average)</div>
+      <div class="term-desc">
+        ค่าเฉลี่ยราคาย้อนหลังแบบถ่วงน้ำหนัก ใช้ดูแนวโน้ม<br><br>
+        <strong>EMA 20</strong> = แนวโน้มระยะสั้น (ประมาณ 1 เดือน)<br>
+        <strong>EMA 50</strong> = แนวโน้มระยะกลาง (ประมาณ 2.5 เดือน)<br>
+        <strong>EMA 200</strong> = แนวโน้มระยะยาว (ประมาณ 10 เดือน)<br><br>
+        ราคา <strong>อยู่เหนือ</strong> EMA = แนวโน้มขาขึ้น / ราคา <strong>อยู่ใต้</strong> EMA = แนวโน้มขาลง
+      </div>
+    </div>
+
+    <div class="term-box">
+      <div class="term-name">52W High / 52W Low</div>
+      <div class="term-desc">
+        ราคาสูงสุดและต่ำสุดในช่วง 52 สัปดาห์ (1 ปี) ที่ผ่านมา<br><br>
+        หุ้นที่ราคา <strong>ทำ 52W High ใหม่</strong> = กำลังอยู่ในแนวโน้มขาขึ้นแข็งแกร่ง<br>
+        หุ้นที่ราคา <strong>ใกล้ 52W Low</strong> = อาจเป็นโอกาสถ้าสัญญาณกลับตัวชัดเจน
+      </div>
+    </div>
+
+    <div class="term-box">
+      <div class="term-name">Market Breadth</div>
+      <div class="term-desc">
+        วัดว่ามีหุ้นกี่ % ที่ราคาอยู่เหนือเส้น EMA ต่างๆ<br><br>
+        ถ้า % สูง เช่น 70% อยู่เหนือ EMA50 = ตลาดโดยรวมอยู่ในแนวโน้มขาขึ้น<br>
+        ถ้า % ต่ำ เช่น 30% อยู่เหนือ EMA50 = ตลาดโดยรวมอ่อนแอ
+      </div>
+    </div>
+
+    <div class="term-box">
+      <div class="term-name">Sec.Rank (Sector Rank)</div>
+      <div class="term-desc">
+        อันดับของหุ้นในกลุ่ม sector เดียวกัน เรียงจาก RS Score สูงสุด<br><br>
+        เช่น <strong>2/15</strong> = อันดับ 2 จาก 15 หุ้นในกลุ่มเดียวกัน<br><br>
+        <span class="chip chip-green">อันดับ 1–25%</span> หุ้นแข็งแกร่งในกลุ่ม &nbsp;
+        <span class="chip chip-yellow">25–50%</span> ปานกลาง &nbsp;
+        <span class="chip chip-gray">&gt;50%</span> อ่อนกว่าครึ่งกลุ่ม
+      </div>
+    </div>
+
+    <div class="term-box">
+      <div class="term-name">P/E (Price to Earnings)</div>
+      <div class="term-desc">
+        อัตราส่วนราคาต่อกำไร — ตลาดยินดีจ่ายกี่เท่าของกำไรต่อปี<br><br>
+        <span class="chip chip-green">&lt; 15x</span> ถูก &nbsp;
+        <span class="chip chip-yellow">15–25x</span> ปานกลาง &nbsp;
+        <span class="chip chip-red">&gt; 25x</span> แพง (หรือกำไรต่ำมาก)
+      </div>
+    </div>
+
+    <div class="term-box">
+      <div class="term-name">P/BV (Price to Book Value)</div>
+      <div class="term-desc">
+        อัตราส่วนราคาต่อมูลค่าทางบัญชี — ตลาดยินดีจ่ายกี่เท่าของสินทรัพย์สุทธิ<br><br>
+        <span class="chip chip-green">&lt; 1x</span> ซื้อได้ต่ำกว่ามูลค่าทางบัญชี &nbsp;
+        <span class="chip chip-yellow">1–2x</span> ปานกลาง &nbsp;
+        <span class="chip chip-red">&gt; 2x</span> แพงกว่ามูลค่าบัญชี
+      </div>
+    </div>
+
+    <div class="term-box">
+      <div class="term-name">Dividend Yield (อัตราผลตอบแทนเงินปันผล)</div>
+      <div class="term-desc">
+        ปันผลที่ได้รับต่อปี คิดเป็น % ของราคาหุ้นปัจจุบัน<br><br>
+        <span class="chip chip-green">≥ 4%</span> ปันผลสูง &nbsp;
+        <span class="chip chip-yellow">2–4%</span> ปานกลาง &nbsp;
+        <span class="chip chip-gray">&lt; 2%</span> ต่ำ
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ===== OVERVIEW ===== -->
+  <div class="section" id="overview">
+    <div class="page-badge">📊 หน้า Overview</div>
+    <h2>Overview — ภาพรวมตลาด</h2>
+    <p>หน้าแรกที่เปิดขึ้นมา แสดงสภาพตลาดโดยรวม เหมาะสำหรับ <strong>ดูก่อนทุกครั้งที่เปิดโปรแกรม</strong></p>
+
+    <h3>Stat Cards (กล่องตัวเลขด้านบน)</h3>
+    <table>
+      <tr><th>ตัวเลข</th><th>ความหมาย</th></tr>
+      <tr><td><strong>หุ้นทั้งหมด</strong></td><td>จำนวนหุ้น SET ทั้งหมดในระบบ</td></tr>
+      <tr><td><strong>ขึ้นวันนี้</strong></td><td>จำนวนหุ้นที่ราคาเพิ่มขึ้นจากวันก่อน</td></tr>
+      <tr><td><strong>ลงวันนี้</strong></td><td>จำนวนหุ้นที่ราคาลดลงจากวันก่อน</td></tr>
+      <tr><td><strong>RS ≥ 80</strong></td><td>จำนวนหุ้นที่ RS Score อยู่ในระดับแข็งแกร่งมาก (Top 20%)</td></tr>
+    </table>
+
+    <h3>Market Breadth — % Above EMA</h3>
+    <p>แสดงเป็น Bar ว่ามีหุ้นกี่ % ที่ราคาอยู่เหนือเส้น EMA แต่ละเส้น</p>
+    <div class="callout tip">
+      <strong>วิธีอ่าน:</strong> EMA50 &gt; 60% = ตลาดอยู่ในแนวโน้มขาขึ้น / EMA50 &lt; 40% = ตลาดอ่อนแอ ควรระวัง
+    </div>
+
+    <h3>RS Distribution</h3>
+    <p>กราฟแท่งแสดงการกระจายตัวของ RS Score ทั้งตลาด — ถ้าหุ้นกองอยู่ที่ช่วง RS สูง (80–99) แสดงว่าตลาดแข็งแกร่ง</p>
+
+    <h3>Top Gainers / Top Losers</h3>
+    <p>หุ้นที่ขึ้นและลงมากที่สุดในวันนั้น เรียงจากมากไปน้อย</p>
+
+    <h3>Industry Group Ranking</h3>
+    <p>อันดับกลุ่มอุตสาหกรรมตามผลตอบแทน 1 เดือน ช่วยเห็นว่ากลุ่มไหนนำตลาดอยู่</p>
+
+    <h3>RS Leaders (Top 10)</h3>
+    <p>หุ้น 10 อันดับแรกที่มี RS Score สูงสุดในตลาด</p>
+  </div>
+
+  <!-- ===== ROTATION ===== -->
+  <div class="section" id="rotation">
+    <div class="page-badge">🔄 หน้า Rotation</div>
+    <h2>Rotation — การหมุนเวียนของกลุ่มหุ้น</h2>
+    <p>แสดงการเคลื่อนไหวของ <strong>กลุ่มอุตสาหกรรม</strong> ในรูปแบบ Scatter Plot โดยเปรียบเทียบ:</p>
+    <ul style="margin: 12px 0 12px 24px; color: var(--text2);">
+      <li><strong>แกน X</strong> = ผลตอบแทนระยะยาว (3 เดือน)</li>
+      <li><strong>แกน Y</strong> = ผลตอบแทนระยะสั้น (1 เดือน)</li>
+    </ul>
+    <table>
+      <tr><th>ตำแหน่ง</th><th>ความหมาย</th><th>การตีความ</th></tr>
+      <tr><td><span class="chip chip-green">บนขวา</span></td><td>Leading — นำตลาด</td><td>แข็งแกร่งทั้งระยะสั้นและยาว กลุ่มที่น่าสนใจที่สุด</td></tr>
+      <tr><td><span class="chip chip-blue">บนซ้าย</span></td><td>Improving — กำลังฟื้น</td><td>ระยะสั้นดี แต่ยังตามหลังระยะยาว — อาจกำลังกลับตัว</td></tr>
+      <tr><td><span class="chip chip-yellow">ล่างขวา</span></td><td>Weakening — เริ่มอ่อน</td><td>ระยะยาวดี แต่ระยะสั้นเริ่มอ่อน — อาจพักตัว</td></tr>
+      <tr><td><span class="chip chip-red">ล่างซ้าย</span></td><td>Lagging — ตามหลัง</td><td>อ่อนแอทั้งคู่ หลีกเลี่ยงก่อน</td></tr>
+    </table>
+    <div class="callout note">
+      <strong>วิธีใช้:</strong> หาหุ้นจากกลุ่มที่อยู่แถว "Leading" หรือ "Improving" จะมีโอกาสสูงกว่า
+    </div>
+  </div>
+
+  <!-- ===== RS LEADERS ===== -->
+  <div class="section" id="rs-leaders">
+    <div class="page-badge">🏆 หน้า RS 80+</div>
+    <h2>RS 80+ — หุ้นที่มี RS Score สูง</h2>
+    <p>แสดงเฉพาะหุ้นที่มี RS Score ≥ 80 หรือ <strong>Top 20% ของตลาด</strong> — นี่คือหุ้นที่แข็งแกร่งที่สุดในตลาด ณ ขณะนี้</p>
+
+    <h3>คอลัมน์ในตาราง</h3>
+    <table>
+      <tr><th>คอลัมน์</th><th>ความหมาย</th></tr>
+      <tr><td><strong>RS</strong></td><td>RS Score (0–99)</td></tr>
+      <tr><td><strong>Symbol</strong></td><td>ชื่อย่อหุ้น</td></tr>
+      <tr><td><strong>Sector</strong></td><td>กลุ่มอุตสาหกรรม</td></tr>
+      <tr><td><strong>Price</strong></td><td>ราคาล่าสุด</td></tr>
+      <tr><td><strong>1D% / 1M% / 3M%</strong></td><td>ผลตอบแทนย้อนหลัง 1 วัน / 1 เดือน / 3 เดือน</td></tr>
+      <tr><td><strong>EMA50 / EMA200</strong></td><td>บอกว่าราคาอยู่เหนือ EMA ไหมบ้าง ✓ = อยู่เหนือ</td></tr>
+    </table>
+  </div>
+
+  <!-- ===== SECTORS ===== -->
+  <div class="section" id="sectors">
+    <div class="page-badge">🏭 หน้า Sectors</div>
+    <h2>Sectors — รายกลุ่มอุตสาหกรรม</h2>
+    <p>เปรียบเทียบผลการดำเนินงานของแต่ละกลุ่มอุตสาหกรรม ช่วยหาว่า <strong>เงินกำลังไหลเข้ากลุ่มไหน</strong></p>
+
+    <h3>Sector vs Industry</h3>
+    <p>มีปุ่มเปลี่ยนมุมมองระหว่าง <strong>Sector</strong> (กลุ่มใหญ่) และ <strong>Industry</strong> (กลุ่มย่อย)</p>
+
+    <h3>คอลัมน์สำคัญ</h3>
+    <table>
+      <tr><th>คอลัมน์</th><th>ความหมาย</th></tr>
+      <tr><td><strong>จำนวน</strong></td><td>จำนวนหุ้นทั้งหมดในกลุ่มนี้</td></tr>
+      <tr><td><strong>1D% – 1Y%</strong></td><td>ผลตอบแทนเฉลี่ยของทุกหุ้นในกลุ่ม ช่วงต่างๆ</td></tr>
+      <tr><td><strong>Avg RS</strong></td><td>RS Score เฉลี่ยของกลุ่ม ยิ่งสูงยิ่งแข็งแกร่ง</td></tr>
+      <tr><td><strong>% &gt;EMA50</strong></td><td>% หุ้นในกลุ่มที่ราคาอยู่เหนือ EMA50</td></tr>
+      <tr><td><strong>New High</strong></td><td>จำนวนหุ้นที่ทำ 52W High ใหม่ / จำนวนทั้งหมดในกลุ่ม <br><em>คลิกตัวเลขได้ เพื่อดูว่าเป็นหุ้นอะไรบ้าง</em></td></tr>
+      <tr><td><strong>P/E</strong></td><td>P/E เฉลี่ยของกลุ่ม <span class="chip chip-green">&lt;15x</span> <span class="chip chip-yellow">15-25x</span> <span class="chip chip-red">&gt;25x</span></td></tr>
+      <tr><td><strong>P/BV</strong></td><td>P/BV เฉลี่ยของกลุ่ม <span class="chip chip-green">&lt;1x</span> <span class="chip chip-yellow">1-2x</span> <span class="chip chip-red">&gt;2x</span></td></tr>
+      <tr><td><strong>Div%</strong></td><td>Dividend Yield เฉลี่ยของกลุ่ม</td></tr>
+    </table>
+
+    <div class="callout tip">
+      <strong>เคล็ดลับ:</strong> คลิกชื่อ Sector เพื่อดูรายชื่อหุ้นทั้งหมดในกลุ่มนั้น / คลิกหัวคอลัมน์เพื่อเรียงลำดับ
+    </div>
+  </div>
+
+  <!-- ===== STOCKS ===== -->
+  <div class="section" id="stocks">
+    <div class="page-badge">📋 หน้าหุ้นทั้งหมด</div>
+    <h2>หุ้นทั้งหมด</h2>
+    <p>ตารางหุ้น SET ทั้งหมดกว่า 900 ตัว พร้อมข้อมูลครบ สามารถกรองและเรียงลำดับได้</p>
+
+    <h3>การกรองข้อมูล</h3>
+    <ul style="margin: 12px 0 12px 24px; color: var(--text2);">
+      <li style="margin-bottom:8px"><strong>ช่องค้นหา</strong> — พิมพ์ชื่อหรือ Symbol หุ้น เช่น "PTT" หรือ "ปตท"</li>
+      <li style="margin-bottom:8px"><strong>Industry Group</strong> — กดปุ่มกรองตาม Industry Group ใหญ่</li>
+      <li style="margin-bottom:8px"><strong>Sector</strong> — กรองตาม Sector ย่อย</li>
+    </ul>
+
+    <h3>คอลัมน์</h3>
+    <table>
+      <tr><th>คอลัมน์</th><th>ความหมาย</th></tr>
+      <tr><td><strong>RS</strong></td><td>RS Score (0–99)</td></tr>
+      <tr><td><strong>Symbol / Name</strong></td><td>ชื่อย่อและชื่อเต็มหุ้น</td></tr>
+      <tr><td><strong>Price</strong></td><td>ราคาปิดล่าสุด (บาท)</td></tr>
+      <tr><td><strong>1D% – YTD%</strong></td><td>ผลตอบแทนช่วงต่างๆ</td></tr>
+      <tr><td><strong>Mkt Cap</strong></td><td>Market Capitalization (มูลค่าตลาด) — แสดงเป็น B (พันล้าน)</td></tr>
+      <tr><td><strong>Vol(20)</strong></td><td>ปริมาณการซื้อขายเฉลี่ย 20 วัน</td></tr>
+      <tr><td><strong>EMA50 / EMA200</strong></td><td>✓ = ราคาอยู่เหนือ EMA / — = อยู่ใต้</td></tr>
+      <tr><td><strong>Sparkline</strong></td><td>กราฟราคาขนาดเล็กแสดงแนวโน้ม 3 เดือน</td></tr>
+    </table>
+    <div class="callout tip">
+      <strong>เคล็ดลับ:</strong> คลิกหัวคอลัมน์เพื่อเรียงลำดับ คลิกซ้ำเพื่อกลับทิศ
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- ===== SCREENER ===== -->
+  <div class="section" id="screener">
+    <div class="page-badge">🔍 หน้า Screener</div>
+    <h2>Stock Screener — กรองหุ้น</h2>
+    <p>เครื่องมือค้นหาหุ้นตามเงื่อนไขที่กำหนดเอง — ใส่ค่าที่ต้องการในช่องแล้วกด <strong>ค้นหา</strong></p>
+
+    <h3>Preset Buttons (ปุ่มลัด)</h3>
+    <table>
+      <tr><th>Preset</th><th>เงื่อนไข</th><th>เหมาะสำหรับ</th></tr>
+      <tr><td><strong>High Yield + RS</strong></td><td>RS ≥ 60 + Div Yield ≥ 3%</td><td>หาหุ้นปันผลดีที่กำลังแข็งแกร่ง</td></tr>
+      <tr><td><strong>Low PBV + กลับตัว</strong></td><td>P/BV ≤ 1.5 + RS ≥ 45 + 1M% ≥ 0%</td><td>หาหุ้น Value ที่เริ่มมีสัญญาณขึ้น</td></tr>
+      <tr><td><strong>ล้างทั้งหมด</strong></td><td>—</td><td>เริ่มกรองใหม่ตั้งแต่ต้น</td></tr>
+    </table>
+
+    <h3>Filter ทั้งหมด</h3>
+    <table>
+      <tr><th>Filter</th><th>ความหมาย</th><th>ตัวอย่าง</th></tr>
+      <tr><td><strong>RS Score ≥</strong></td><td>RS ขั้นต่ำ</td><td>80 = เฉพาะหุ้นแข็งแกร่ง Top 20%</td></tr>
+      <tr><td><strong>1M% ≥</strong></td><td>ผลตอบแทน 1 เดือน ขั้นต่ำ</td><td>5 = ขึ้นอย่างน้อย 5% ใน 1 เดือน</td></tr>
+      <tr><td><strong>3M% ≥</strong></td><td>ผลตอบแทน 3 เดือน ขั้นต่ำ</td><td>10 = ขึ้นอย่างน้อย 10% ใน 3 เดือน</td></tr>
+      <tr><td><strong>1Y% ≥</strong></td><td>ผลตอบแทน 1 ปี ขั้นต่ำ</td><td>20 = ขึ้นอย่างน้อย 20% ใน 1 ปี</td></tr>
+      <tr><td><strong>ราคา</strong></td><td>ช่วงราคาต่ำสุด – สูงสุด (บาท)</td><td>10 – 100</td></tr>
+      <tr><td><strong>Mkt Cap ≥</strong></td><td>Market Cap ขั้นต่ำ (ล้านบาท)</td><td>1000 = มูลค่าตลาดอย่างน้อย 1 พันล้าน</td></tr>
+      <tr><td><strong>Vol(20) ≥</strong></td><td>ปริมาณซื้อขายเฉลี่ย 20 วัน ขั้นต่ำ</td><td>1000000 = 1 ล้านหุ้นต่อวัน</td></tr>
+      <tr><td><strong>Above EMA50 / EMA200</strong></td><td>ต้องการเฉพาะหุ้นที่ราคาอยู่เหนือ EMA ที่เลือก</td><td>ติ๊กถูก = กรองเฉพาะขาขึ้น</td></tr>
+      <tr><td><strong>ห่างจาก 52W High ≤</strong></td><td>ห่างจากจุดสูงสุดไม่เกินกี่ %</td><td>10 = ราคาไม่ต่ำกว่า High เกิน 10%</td></tr>
+      <tr><td><strong>ห่างจาก 52W Low ≤</strong></td><td>ห่างจากจุดต่ำสุดไม่เกินกี่ %</td><td>20 = ราคาสูงกว่า Low ไม่เกิน 20%</td></tr>
+      <tr><td><strong>P/E ≤</strong></td><td>P/E สูงสุดที่ยอมรับได้</td><td>15 = กรองเฉพาะหุ้นที่ P/E ≤ 15x</td></tr>
+      <tr><td><strong>P/BV ≤</strong></td><td>P/BV สูงสุดที่ยอมรับได้</td><td>1.5 = P/BV ≤ 1.5x</td></tr>
+      <tr><td><strong>Div Yield ≥</strong></td><td>Dividend Yield ขั้นต่ำ</td><td>4 = ปันผล ≥ 4% ต่อปี</td></tr>
+    </table>
+
+    <div class="callout note">
+      <strong>เคล็ดลับการใช้ Screener:</strong> ไม่ต้องใส่ทุกช่อง ใส่แค่ที่ต้องการ ช่องที่เว้นว่างไว้จะไม่นำมากรอง
+    </div>
+  </div>
+
+  <!-- ===== 52W HIGH ===== -->
+  <div class="section" id="52w-high">
+    <div class="page-badge">🚀 หน้า 52W High</div>
+    <h2>52W High — หุ้นที่ทำจุดสูงสุดใหม่</h2>
+    <p>แสดงเฉพาะหุ้นที่ราคาปัจจุบัน <strong>สูงกว่าหรือเท่ากับราคาสูงสุดใน 52 สัปดาห์</strong> — สัญญาณแนวโน้มขาขึ้นที่แข็งแกร่ง</p>
+
+    <div class="callout tip">
+      <strong>หลักการ:</strong> หุ้นที่ทำ New High มักจะยังคงขึ้นต่อไป เพราะไม่มี Overhead Supply (ไม่มีคนติดดอย) นักลงทุนสถาบันมักมองหาหุ้นกลุ่มนี้
+    </div>
+
+    <h3>กรองข้อมูล</h3>
+    <ul style="margin: 12px 0 12px 24px; color: var(--text2);">
+      <li><strong>Market</strong> — เลือกดูเฉพาะ SET หรือ mai หรือทั้งหมด</li>
+      <li><strong>Sector</strong> — กรองตามกลุ่มอุตสาหกรรม</li>
+    </ul>
+
+    <h3>คอลัมน์พิเศษ</h3>
+    <table>
+      <tr><th>คอลัมน์</th><th>ความหมาย</th></tr>
+      <tr><td><strong>FromHigh%</strong></td><td>ห่างจาก 52W High กี่ % (ค่าเป็นลบ = ต่ำกว่า High)</td></tr>
+      <tr><td><strong>Range%</strong></td><td>ช่วงระหว่าง 52W Low ถึง 52W High คิดเป็น % ของ Low</td></tr>
+    </table>
+  </div>
+
+  <!-- ===== 52W LOW ===== -->
+  <div class="section" id="52w-low">
+    <div class="page-badge">📉 หน้า 52W Low</div>
+    <h2>52W Low Watch — หุ้นใกล้จุดต่ำสุด</h2>
+    <p>แสดงหุ้นที่ราคา <strong>ใกล้จุดต่ำสุดใน 52 สัปดาห์</strong> เหมาะสำหรับหานักลงทุนที่ต้องการ <em>หาหุ้นกลับตัวจากข้างล่าง</em></p>
+
+    <div class="callout warn">
+      <strong>คำเตือน:</strong> หุ้นที่ใกล้ 52W Low ไม่ได้หมายความว่าจะขึ้น ควรรอสัญญาณกลับตัวที่ชัดเจนก่อนเข้า เช่น Volume เพิ่ม หรือ 1D% เป็นบวก
+    </div>
+
+    <h3>การกรอง</h3>
+    <p>เลือกดูหุ้นที่ห่างจาก 52W Low ไม่เกิน: <strong>5% / 10% / 20% / ทั้งหมด</strong></p>
+
+    <h3>วิธีใช้หาสัญญาณกลับตัว</h3>
+    <p>ลองใช้ร่วมกับ Screener โดยกรอง:</p>
+    <ul style="margin: 12px 0 12px 24px; color: var(--text2);">
+      <li>ห่างจาก 52W Low ≤ 10%</li>
+      <li>1D% ≥ 1 (วันนี้เริ่มขึ้น)</li>
+    </ul>
+  </div>
+
+  <hr>
+
+  <!-- ===== BREAKOUT ===== -->
+  <div class="section" id="breakout">
+    <div class="page-badge">💥 หน้า Breakout</div>
+    <h2>Breakout — หุ้นที่กำลัง Breakout</h2>
+    <p>กรองหุ้นที่มีเงื่อนไขครบสำหรับ Breakout Setup:</p>
+    <ul style="margin: 12px 0 12px 24px; color: var(--text2);">
+      <li>ราคาอยู่เหนือ EMA50 และ EMA200</li>
+      <li>RS Score สูง</li>
+      <li>ห่างจาก 52W High ไม่มาก</li>
+    </ul>
+
+    <h3>คอลัมน์สำคัญ</h3>
+    <table>
+      <tr><th>คอลัมน์</th><th>ความหมาย</th></tr>
+      <tr><td><strong>RS</strong></td><td>RS Score — ยิ่งสูงยิ่งดี</td></tr>
+      <tr><td><strong>Sec.Rank</strong></td><td>อันดับในกลุ่ม sector เดียวกัน เช่น 2/15 = อันดับ 2 จาก 15 ตัว</td></tr>
+      <tr><td><strong>FromHigh%</strong></td><td>ห่างจาก 52W High กี่ % ยิ่งใกล้ 0% ยิ่งดี</td></tr>
+      <tr><td><strong>Range%</strong></td><td>ช่วง High-Low ของ 52 สัปดาห์</td></tr>
+      <tr><td><strong>EMA50 / EMA200</strong></td><td>✓ สีเขียว = อยู่เหนือ / ✗ สีแดง = อยู่ใต้</td></tr>
+    </table>
+
+    <div class="callout tip">
+      <strong>Setup ที่ดี:</strong> RS สูง + Sec.Rank ดี (อันดับ 1–4 ในกลุ่ม) + อยู่เหนือ EMA50 และ EMA200 + ห่างจาก High ไม่เกิน 10%
+    </div>
+  </div>
+
+  <!-- ===== MOMENTUM ===== -->
+  <div class="section" id="momentum">
+    <div class="page-badge">⚡ หน้า Momentum Alignment</div>
+    <h2>Momentum Alignment — ทุก Timeframe วิ่งไปทางเดียวกัน</h2>
+    <p>แสดงหุ้นที่ <strong>ผลตอบแทนเป็นบวกในทุกช่วงเวลา</strong> (1D, 1W, 1M, 3M) — แสดงว่า Momentum แข็งแกร่งต่อเนื่อง</p>
+
+    <div class="callout note">
+      <strong>ความหมาย:</strong> หุ้นที่ขึ้นทุก Timeframe มักมีโอกาสขึ้นต่อสูงกว่าหุ้นที่ขึ้นเฉพาะบางช่วง เพราะมีทั้งแรงซื้อระยะสั้นและยาวพร้อมกัน
+    </div>
+
+    <p>คอลัมน์เหมือนกับหน้า Breakout และสามารถคลิกหัวคอลัมน์เพื่อเรียงลำดับได้ทุกคอลัมน์</p>
+  </div>
+
+  <!-- ===== HEATMAP ===== -->
+  <div class="section" id="heatmap">
+    <div class="page-badge">🟥 หน้า Heatmap</div>
+    <h2>Heatmap — แผนที่ความร้อนของตลาด</h2>
+    <p>แสดงผลการดำเนินงานของหุ้นในรูปแบบ Grid — ขนาดกล่องสัมพันธ์กับ Market Cap สีบ่งบอกผลตอบแทน</p>
+
+    <table>
+      <tr><th>สี</th><th>ความหมาย</th></tr>
+      <tr><td><span class="chip chip-green">เขียว</span></td><td>ราคาขึ้น (ยิ่งเข้มยิ่งขึ้นมาก)</td></tr>
+      <tr><td><span class="chip chip-red">แดง</span></td><td>ราคาลง (ยิ่งเข้มยิ่งลงมาก)</td></tr>
+      <tr><td><span class="chip chip-gray">เทา</span></td><td>ไม่เปลี่ยนแปลง</td></tr>
+    </table>
+
+    <p>เลือก Timeframe ดูได้: <strong>1D / 1W / 1M / 3M / 1Y</strong></p>
+  </div>
+
+  <!-- ===== EMA BREADTH ===== -->
+  <div class="section" id="ema-breadth">
+    <div class="page-badge">📈 หน้า EMA Breadth</div>
+    <h2>EMA Breadth — ความกว้างของตลาด</h2>
+    <p>แสดงรายละเอียด Market Breadth แยกตาม Sector ว่าแต่ละกลุ่มมีหุ้นกี่ % ที่อยู่เหนือ EMA50 และ EMA200</p>
+
+    <div class="callout tip">
+      <strong>วิธีอ่าน:</strong> Sector ที่มี % สูงทั้ง EMA50 และ EMA200 = ทั้งกลุ่มอยู่ในขาขึ้น เป็นสัญญาณดีสำหรับหุ้นในกลุ่มนั้น
+    </div>
+  </div>
+
+  <!-- ===== WATCHLIST ===== -->
+  <div class="section" id="watchlist">
+    <div class="page-badge">⭐ หน้า Watchlist</div>
+    <h2>Watchlist — หุ้นที่ติดตาม</h2>
+    <p>บันทึกหุ้นที่สนใจไว้ติดตามได้ ข้อมูลจะ <strong>เก็บในเครื่องของคุณ</strong> (localStorage) ไม่หายหลัง Refresh</p>
+
+    <h3>วิธีเพิ่มหุ้น</h3>
+    <p>พิมพ์ Symbol หุ้นในช่องค้นหาด้านบนของหน้า Watchlist แล้วกด Enter หรือกดปุ่ม + เพื่อเพิ่ม</p>
+
+    <h3>วิธีลบหุ้น</h3>
+    <p>กดปุ่ม ✕ ที่อยู่ท้ายแถวของหุ้นที่ต้องการลบออก</p>
+
+    <div class="callout note">
+      <strong>หมายเหตุ:</strong> Watchlist เก็บข้อมูลใน Browser ถ้าล้าง Cache หรือเปลี่ยน Browser รายการจะหาย ควรจดชื่อหุ้นที่สำคัญไว้ด้วย
+    </div>
+  </div>
+
+  <hr>
+
+  <hr>
+
+  <!-- ===== STRATEGY BREAKOUT ===== -->
+  <div class="section" id="strategy-breakout">
+    <h2>🎯 กลยุทธ์ที่ 1: หาหุ้น Breakout แบบ Top-Down</h2>
+    <p>กลยุทธ์นี้เน้นหาหุ้นที่ <strong>กำลังแข็งแกร่งที่สุดในตลาด</strong> โดยเริ่มจากภาพใหญ่ลงมาหาหุ้นเดี่ยว</p>
+
+    <div class="callout info">
+      <strong>หลักการ:</strong> ซื้อหุ้นที่แข็งแกร่งที่สุด ในกลุ่มที่แข็งแกร่งที่สุด ในตลาดที่อยู่ในขาขึ้น
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>เปิดหน้า Overview — ตรวจสภาพตลาด</h4>
+          <p>ดู <strong>Market Breadth % Above EMA50</strong> ถ้า <span class="chip chip-green">&gt; 60%</span> = ตลาดดี เหมาะจะหาหุ้นขาขึ้น<br>
+          ถ้า <span class="chip chip-red">&lt; 40%</span> = ตลาดอ่อน ยังไม่ควรรีบซื้อ</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>เปิดหน้า Sectors — หากลุ่มนำตลาด</h4>
+          <p>เรียงคอลัมน์ <strong>Avg RS</strong> จากมากไปน้อย ดูกลุ่ม Top 3 ที่มี RS สูงสุด<br>
+          ตรวจ <strong>New High</strong> ด้วย — กลุ่มที่มีหุ้น New High เยอะ = เงินกำลังไหลเข้า</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>เปิดหน้า Breakout — กรองหุ้นในกลุ่มที่เลือก</h4>
+          <p>คลิก Sector ที่ได้ในขั้นตอน 2 เพื่อกรองเฉพาะกลุ่มนั้น แล้วดูหุ้นที่:<br>
+          • <strong>RS สูง</strong> (ควร ≥ 70)<br>
+          • <strong>Sec.Rank ดี</strong> (เช่น 1/15, 2/15)<br>
+          • <strong>อยู่เหนือ EMA50 และ EMA200</strong> ทั้งคู่<br>
+          • <strong>ห่างจาก 52W High ไม่เกิน 10%</strong></p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>เพิ่มใน Watchlist — รอจังหวะ</h4>
+          <p>เพิ่มหุ้นที่ผ่านขั้นตอน 3 ใน Watchlist ก่อน แล้วรอดู Volume และ Price Action ก่อนตัดสินใจซื้อ</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>ตัวอย่าง Setup ที่ดี</h3>
+    <div style="background:#f0fff4;border:1px solid #bcf0c4;border-radius:8px;padding:16px;font-size:13px;">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;text-align:center;">
+        <div><div style="font-size:11px;color:#656d76;margin-bottom:4px">RS Score</div><div style="font-size:22px;font-weight:700;color:#1a7f37">85</div></div>
+        <div><div style="font-size:11px;color:#656d76;margin-bottom:4px">Sec.Rank</div><div style="font-size:22px;font-weight:700;color:#1a7f37">2/18</div></div>
+        <div><div style="font-size:11px;color:#656d76;margin-bottom:4px">FromHigh%</div><div style="font-size:22px;font-weight:700;color:#1a7f37">-4%</div></div>
+        <div><div style="font-size:11px;color:#656d76;margin-bottom:4px">EMA50/200</div><div style="font-size:22px;font-weight:700;color:#1a7f37">✓ ✓</div></div>
+      </div>
+      <div style="margin-top:12px;color:#1a7f37;font-weight:600;text-align:center">→ Setup แบบนี้คือ Breakout ที่น่าสนใจมาก</div>
+    </div>
+  </div>
+
+  <!-- ===== STRATEGY YIELD ===== -->
+  <div class="section" id="strategy-yield">
+    <h2>💰 กลยุทธ์ที่ 2: หาหุ้นปันผลสูง + RS ดี</h2>
+    <p>เหมาะสำหรับนักลงทุนที่ต้องการ <strong>กระแสเงินสดสม่ำเสมอ</strong> พร้อมกับหุ้นที่มีแนวโน้มราคาดีด้วย</p>
+
+    <div class="callout note">
+      <strong>หลักการ:</strong> หุ้นปันผลสูงที่ RS ดีด้วย = ได้ทั้ง Passive Income และ Capital Gain — ดีกว่าเลือกแค่ปันผลสูงอย่างเดียวซึ่งอาจเป็นหุ้นที่ราคาตกนาน
+    </div>
+
+    <h3>วิธีใช้ Screener</h3>
+    <p>กดปุ่ม <strong>"High Yield + RS"</strong> ในหน้า Screener หรือตั้งค่าเองดังนี้:</p>
+    <table>
+      <tr><th>Filter</th><th>ค่าที่แนะนำ</th><th>เหตุผล</th></tr>
+      <tr><td>RS Score ≥</td><td>60</td><td>หุ้นที่แข็งแกร่งกว่าครึ่งตลาด</td></tr>
+      <tr><td>Div Yield ≥</td><td>3</td><td>ปันผลอย่างน้อย 3% ต่อปี</td></tr>
+      <tr><td>P/BV ≤ (เสริม)</td><td>2</td><td>ไม่แพงเกินไปเมื่อเทียบกับสินทรัพย์</td></tr>
+      <tr><td>Above EMA50 (เสริม)</td><td>ติ๊กถูก</td><td>ราคายังอยู่ในแนวโน้มขาขึ้น</td></tr>
+    </table>
+
+    <h3>ตรวจ Sector เพิ่มเติม</h3>
+    <p>หลังได้ผลลัพธ์แล้ว ดูคอลัมน์ <strong>Sector</strong> — ถ้าหุ้นอยู่ในกลุ่มที่ Sectors page แสดง Avg RS สูงด้วย = ดีมากเพราะทั้งหุ้นและกลุ่มแข็งแกร่ง</p>
+
+    <div class="callout warn">
+      <strong>ระวัง Yield Trap:</strong> บางหุ้น Div Yield สูงเพราะราคาตกลงมามาก ไม่ใช่เพราะปันผลเยอะขึ้น ดูด้วยว่า RS Score ดีด้วยหรือเปล่า ถ้า RS ต่ำมาก (&lt; 30) ควรระวัง
+    </div>
+  </div>
+
+  <!-- ===== STRATEGY VALUE ===== -->
+  <div class="section" id="strategy-value">
+    <h2>📦 กลยุทธ์ที่ 3: หาหุ้น Value ที่เริ่มกลับตัว</h2>
+    <p>เหมาะสำหรับนักลงทุนที่ต้องการ <strong>ซื้อหุ้นถูก</strong> แต่รอให้มีสัญญาณ Momentum กลับมาก่อน ไม่ใช่แค่ถูก แต่ต้องเริ่มขึ้นด้วย</p>
+
+    <h3>วิธีใช้ Screener</h3>
+    <p>กดปุ่ม <strong>"Low PBV + กลับตัว"</strong> หรือตั้งค่าเองดังนี้:</p>
+    <table>
+      <tr><th>Filter</th><th>ค่าที่แนะนำ</th><th>เหตุผล</th></tr>
+      <tr><td>P/BV ≤</td><td>1.5</td><td>ราคาไม่ห่างจากมูลค่าทางบัญชีมาก</td></tr>
+      <tr><td>P/E ≤ (เสริม)</td><td>15</td><td>กำไรยังดีอยู่ในราคาไม่แพง</td></tr>
+      <tr><td>RS Score ≥</td><td>45</td><td>เริ่มแข็งแกร่งขึ้น ไม่ใช่ขาลงสุดๆ</td></tr>
+      <tr><td>1M% ≥</td><td>0</td><td>อย่างน้อยราคาไม่ลงในเดือนนี้</td></tr>
+    </table>
+
+    <h3>ใช้ 52W Low Watch ช่วยกรองด้วย</h3>
+    <p>เปิดหน้า <strong>52W Low</strong> กรอง "ห่างจาก Low ≤ 20%" แล้วดูว่าหุ้นตัวไหนที่:</p>
+    <ul style="margin: 12px 0 12px 24px; color: var(--text2);">
+      <li>1D% หรือ 1W% เป็นบวก (เริ่มมีแรงซื้อ)</li>
+      <li>P/BV ต่ำ (ในหน้า Screener)</li>
+      <li>RS ไม่ต่ำเกินไป (≥ 40)</li>
+    </ul>
+    <div class="callout warn">
+      <strong>ความเสี่ยง:</strong> หุ้น Value บางตัวที่ราคาต่ำ ต่ำเพราะมีปัญหาจริงๆ ควรดูงบการเงินนอก Dashboard ก่อนตัดสินใจด้วย
+    </div>
+  </div>
+
+  <!-- ===== STRATEGY ROTATION ===== -->
+  <div class="section" id="strategy-rotation">
+    <h2>🔄 กลยุทธ์ที่ 4: Sector Rotation — ตามเงิน</h2>
+    <p>กลยุทธ์นี้เน้น <strong>อยู่ในกลุ่มที่เงินกำลังไหลเข้า</strong> และออกจากกลุ่มที่เงินเริ่มไหลออก</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>ดู Rotation Chart</h4>
+          <p>กลุ่มที่อยู่ <strong>บนขวา (Leading)</strong> คือกลุ่มที่เงินกำลังไหลเข้าอยู่<br>
+          กลุ่มที่กำลัง <strong>เคลื่อนจาก Lagging → Improving</strong> คืออาจกำลังกลับตัว</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>ยืนยันด้วยหน้า Sectors</h4>
+          <p>กลุ่ม Leading ใน Rotation ควรมี <strong>Avg RS สูง</strong> และ <strong>% &gt;EMA50 สูง</strong> ด้วย ถ้าทั้งสองสอดคล้องกัน = ยืนยันแนวโน้ม</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>ดู New High Count</h4>
+          <p>กลุ่มที่มีหุ้น New High เยอะ = กลุ่มที่เงินยังคงไหลเข้าต่อเนื่อง คลิกตัวเลข New High เพื่อดูว่าเป็นหุ้นอะไร</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>หาหุ้นที่ดีที่สุดในกลุ่มนำ</h4>
+          <p>ใช้ Screener กรอง Sector + RS ≥ 70 + Above EMA50 เพื่อหาหุ้นที่แข็งแกร่งที่สุดในกลุ่มนั้น</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SCREENER EXAMPLES ===== -->
+  <div class="section" id="screener-examples">
+    <h2>📝 ตัวอย่าง Screener Recipes</h2>
+    <p>รวม Setup การกรองหุ้นสำหรับเป้าหมายต่างๆ — กรอกค่าในหน้า Screener ได้เลย</p>
+
+    <h3>Recipe 1: หุ้น Momentum แรง</h3>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:13px;">
+        <div style="background:var(--bg);border-radius:6px;padding:10px;text-align:center">
+          <div style="color:var(--text2);font-size:11px;margin-bottom:4px">RS Score ≥</div>
+          <div style="font-size:20px;font-weight:700;color:var(--accent)">80</div>
+        </div>
+        <div style="background:var(--bg);border-radius:6px;padding:10px;text-align:center">
+          <div style="color:var(--text2);font-size:11px;margin-bottom:4px">1M% ≥</div>
+          <div style="font-size:20px;font-weight:700;color:var(--accent)">5</div>
+        </div>
+        <div style="background:var(--bg);border-radius:6px;padding:10px;text-align:center">
+          <div style="color:var(--text2);font-size:11px;margin-bottom:4px">Above EMA50</div>
+          <div style="font-size:20px;font-weight:700;color:#1a7f37">✓</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--text2)">เป้าหมาย: หาหุ้นที่ Momentum แรงทั้งระยะสั้นและยาว เหมาะสำหรับการซื้อตาม Trend</div>
+    </div>
+
+    <h3>Recipe 2: หุ้น Defensive (ตลาดผันผวน)</h3>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:13px;">
+        <div style="background:var(--bg);border-radius:6px;padding:10px;text-align:center">
+          <div style="color:var(--text2);font-size:11px;margin-bottom:4px">Div Yield ≥</div>
+          <div style="font-size:20px;font-weight:700;color:var(--accent)">4%</div>
+        </div>
+        <div style="background:var(--bg);border-radius:6px;padding:10px;text-align:center">
+          <div style="color:var(--text2);font-size:11px;margin-bottom:4px">P/E ≤</div>
+          <div style="font-size:20px;font-weight:700;color:var(--accent)">15x</div>
+        </div>
+        <div style="background:var(--bg);border-radius:6px;padding:10px;text-align:center">
+          <div style="color:var(--text2);font-size:11px;margin-bottom:4px">Above EMA200</div>
+          <div style="font-size:20px;font-weight:700;color:#1a7f37">✓</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--text2)">เป้าหมาย: หุ้น Defensive ปันผลดี ราคาไม่แพง ยังอยู่ในขาขึ้นระยะยาว</div>
+    </div>
+
+    <h3>Recipe 3: หาหุ้น Small/Mid Cap แฝง</h3>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:13px;">
+        <div style="background:var(--bg);border-radius:6px;padding:10px;text-align:center">
+          <div style="color:var(--text2);font-size:11px;margin-bottom:4px">RS Score ≥</div>
+          <div style="font-size:20px;font-weight:700;color:var(--accent)">75</div>
+        </div>
+        <div style="background:var(--bg);border-radius:6px;padding:10px;text-align:center">
+          <div style="color:var(--text2);font-size:11px;margin-bottom:4px">Mkt Cap ≤</div>
+          <div style="font-size:20px;font-weight:700;color:var(--accent)">5B</div>
+        </div>
+        <div style="background:var(--bg);border-radius:6px;padding:10px;text-align:center">
+          <div style="color:var(--text2);font-size:11px;margin-bottom:4px">ห่าง High ≤</div>
+          <div style="font-size:20px;font-weight:700;color:var(--accent)">15%</div>
+        </div>
+        <div style="background:var(--bg);border-radius:6px;padding:10px;text-align:center">
+          <div style="color:var(--text2);font-size:11px;margin-bottom:4px">Above EMA50</div>
+          <div style="font-size:20px;font-weight:700;color:#1a7f37">✓</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--text2)">เป้าหมาย: หา Small Cap ที่ RS ดีแต่ยังไม่ใหญ่ — อาจมี Upside สูงกว่าหุ้นใหญ่</div>
+    </div>
+
+    <h3>Recipe 4: หุ้นใกล้ Breakout New High</h3>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font-size:13px;">
+        <div style="background:var(--bg);border-radius:6px;padding:10px;text-align:center">
+          <div style="color:var(--text2);font-size:11px;margin-bottom:4px">RS Score ≥</div>
+          <div style="font-size:20px;font-weight:700;color:var(--accent)">70</div>
+        </div>
+        <div style="background:var(--bg);border-radius:6px;padding:10px;text-align:center">
+          <div style="color:var(--text2);font-size:11px;margin-bottom:4px">ห่าง High ≤</div>
+          <div style="font-size:20px;font-weight:700;color:var(--accent)">5%</div>
+        </div>
+        <div style="background:var(--bg);border-radius:6px;padding:10px;text-align:center">
+          <div style="color:var(--text2);font-size:11px;margin-bottom:4px">Above EMA50</div>
+          <div style="font-size:20px;font-weight:700;color:#1a7f37">✓</div>
+        </div>
+        <div style="background:var(--bg);border-radius:6px;padding:10px;text-align:center">
+          <div style="color:var(--text2);font-size:11px;margin-bottom:4px">Above EMA200</div>
+          <div style="font-size:20px;font-weight:700;color:#1a7f37">✓</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--text2)">เป้าหมาย: หาหุ้นที่ "กำลังเข้าใกล้" จุดสูงสุดใหม่ รอดู Volume เพิ่มแล้วอาจ Breakout</div>
+    </div>
+  </div>
+
+  <!-- ===== READING TABLES ===== -->
+  <div class="section" id="reading-tables">
+    <h2>📖 การอ่านตาราง</h2>
+
+    <h3>การเรียงลำดับ (Sort)</h3>
+    <p>ทุกตารางในโปรแกรมสามารถ <strong>คลิกที่หัวคอลัมน์</strong> เพื่อเรียงลำดับได้</p>
+    <ul style="margin: 12px 0 12px 24px; color: var(--text2);">
+      <li><strong>↓ (ลูกศรลง)</strong> = เรียงจากมากไปน้อย (คลิกครั้งแรก)</li>
+      <li><strong>↑ (ลูกศรขึ้น)</strong> = เรียงจากน้อยไปมาก (คลิกครั้งที่สอง)</li>
+      <li><strong>↕ (ลูกศรสองทาง)</strong> = ยังไม่ได้เรียงตามคอลัมน์นี้</li>
+    </ul>
+
+    <h3>ความหมายของสีในตาราง</h3>
+    <table>
+      <tr><th>องค์ประกอบ</th><th>สีเขียว</th><th>สีเหลือง</th><th>สีแดง</th></tr>
+      <tr><td><strong>RS Score</strong></td><td>≥ 70 (แข็งแกร่ง)</td><td>40–69</td><td>&lt; 40 (อ่อนแอ)</td></tr>
+      <tr><td><strong>ผลตอบแทน %</strong></td><td>บวก (ขึ้น)</td><td>—</td><td>ลบ (ลง)</td></tr>
+      <tr><td><strong>P/E</strong></td><td>&lt; 15x (ถูก)</td><td>15–25x</td><td>&gt; 25x (แพง)</td></tr>
+      <tr><td><strong>P/BV</strong></td><td>&lt; 1x</td><td>1–2x</td><td>&gt; 2x</td></tr>
+      <tr><td><strong>Div Yield</strong></td><td>≥ 4%</td><td>2–4%</td><td>&lt; 2%</td></tr>
+      <tr><td><strong>Sec.Rank</strong></td><td>Top 25% ในกลุ่ม</td><td>25–50%</td><td>&gt; 50%</td></tr>
+    </table>
+
+    <h3>การอ่าน % ผลตอบแทน</h3>
+    <table>
+      <tr><th>คอลัมน์</th><th>ย่อมาจาก</th><th>ช่วงเวลา</th></tr>
+      <tr><td><strong>1D%</strong></td><td>1 Day</td><td>เปลี่ยนแปลงจากวันก่อนหน้า</td></tr>
+      <tr><td><strong>1W%</strong></td><td>1 Week</td><td>ย้อนหลัง 5 วันทำการ</td></tr>
+      <tr><td><strong>1M%</strong></td><td>1 Month</td><td>ย้อนหลัง ~21 วันทำการ</td></tr>
+      <tr><td><strong>3M%</strong></td><td>3 Months</td><td>ย้อนหลัง ~63 วันทำการ</td></tr>
+      <tr><td><strong>6M%</strong></td><td>6 Months</td><td>ย้อนหลัง ~126 วันทำการ</td></tr>
+      <tr><td><strong>1Y%</strong></td><td>1 Year</td><td>ย้อนหลัง ~252 วันทำการ</td></tr>
+      <tr><td><strong>YTD%</strong></td><td>Year to Date</td><td>ตั้งแต่ต้นปีจนถึงวันนี้</td></tr>
+    </table>
+
+    <h3>การอ่าน Sparkline (กราฟเล็ก)</h3>
+    <p>กราฟเส้นเล็กๆ ในตาราง หุ้นทั้งหมด แสดงแนวโน้มราคาย้อนหลัง 3 เดือน อ่านง่ายๆ:</p>
+    <ul style="margin: 12px 0 12px 24px; color: var(--text2);">
+      <li>เส้น <span style="color:#1a7f37;font-weight:700">เขียว</span> / ขึ้นซ้ายไปขวา = ขาขึ้น</li>
+      <li>เส้น <span style="color:#cf222e;font-weight:700">แดง</span> / ลงซ้ายไปขวา = ขาลง</li>
+      <li>เส้นแบน = Sideway ไม่มีทิศทางชัดเจน</li>
+    </ul>
+
+    <h3>Mkt Cap — วิธีอ่านตัวเลข</h3>
+    <table>
+      <tr><th>ที่แสดงใน Dashboard</th><th>ความหมาย</th></tr>
+      <tr><td>1.5B</td><td>มูลค่าตลาด 1,500 ล้านบาท (1.5 พันล้าน)</td></tr>
+      <tr><td>25B</td><td>มูลค่าตลาด 25,000 ล้านบาท (2.5 หมื่นล้าน)</td></tr>
+      <tr><td>500B</td><td>มูลค่าตลาด 500,000 ล้านบาท (5 แสนล้าน)</td></tr>
+    </table>
+  </div>
+
+  <hr>
+
+  <!-- ===== TIPS ===== -->
+  <div class="section" id="tips">
+    <h2>เคล็ดลับการใช้งาน</h2>
+
+    <h3>Top-Down Analysis ด้วย SET Dashboard</h3>
+    <p>แนวทางการวิเคราะห์จากบนลงล่าง:</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h4>ดู Overview</h4>
+          <p>ตลาดโดยรวมแข็งแกร่งไหม? Market Breadth &gt; 60% = ตลาดดี ควรเป็น Buyer / &lt; 40% = ระวัง</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h4>ดู Sectors</h4>
+          <p>กลุ่มไหน Avg RS สูง + 1M% ดี = เงินกำลังไหลเข้ากลุ่มนั้น เลือกเล่นหุ้นในกลุ่มนำ</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h4>ดู Breakout / Momentum</h4>
+          <p>กรองหา Setup ที่ดีภายในกลุ่มที่เลือก เน้น RS สูง + Sec.Rank ดี + อยู่เหนือ EMA</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h4>เพิ่มใน Watchlist</h4>
+          <p>หุ้นที่ผ่านการคัดกรองแล้ว เพิ่มไว้ติดตามก่อนตัดสินใจซื้อ</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>ตีความสี</h3>
+    <table>
+      <tr><th>สี</th><th>ความหมายทั่วไป</th></tr>
+      <tr><td><span class="chip chip-green">เขียว</span></td><td>ดี / บวก / แข็งแกร่ง</td></tr>
+      <tr><td><span class="chip chip-yellow">เหลือง</span></td><td>ปานกลาง / ระวัง</td></tr>
+      <tr><td><span class="chip chip-red">แดง</span></td><td>ไม่ดี / ลบ / อ่อนแอ</td></tr>
+      <tr><td><span class="chip chip-blue">น้ำเงิน</span></td><td>ข้อมูลอ้างอิง / neutral</td></tr>
+      <tr><td><span class="chip chip-gray">เทา</span></td><td>ไม่มีข้อมูล / —</td></tr>
+    </table>
+  </div>
+
+  <!-- ===== FAQ ===== -->
+  <div class="section" id="faq">
+    <h2>คำถามที่พบบ่อย</h2>
+
+    <h3>ข้อมูลอัปเดตถึงวันไหน?</h3>
+    <p>ดูได้ที่มุมบนขวา "อัปเดต: YYYY-MM-DD HH:MM" — ข้อมูลจะใหม่เท่ากับครั้งล่าสุดที่กด Refresh</p>
+
+    <h3>Refresh แล้ว error ทำไม?</h3>
+    <p>Yahoo Finance มีการ rate limit — กด Refresh ถี่เกินไป หรือกดช่วง 14:30–17:30 น. (ตลาดพึ่งปิด) แก้ไขโดยรอ 30 นาทีแล้วลองใหม่ ข้อมูลเดิมยังแสดงอยู่ระหว่างรอ</p>
+
+    <h3>ทำไม P/E บางหุ้นแสดงเป็น —?</h3>
+    <p>หุ้นที่ขาดทุน (กำไรติดลบ) หรือ Yahoo Finance ไม่มีข้อมูลจะแสดง — แทน ไม่ได้หมายความว่าข้อมูลผิด</p>
+
+    <h3>RS Score คำนวณยังไง?</h3>
+    <p>คำนวณจากผลตอบแทน 1M×2 + 3M×1 + 6M×1 + 1Y×1 แล้ว Rank เป็น Percentile ในกลุ่มหุ้นทั้งหมด คะแนน 99 = ดีที่สุด 1% ของตลาด</p>
+
+    <h3>Watchlist หายหลังเปิด Browser ใหม่?</h3>
+    <p>Watchlist เก็บใน localStorage ของ Browser — ถ้าล้าง Cache หรือเปิด Incognito จะหาย แนะนำใช้ Browser เดิมเสมอ</p>
+
+    <h3>เปิดจากคอมพิวเตอร์เครื่องอื่นในบ้านได้ไหม?</h3>
+    <p>ได้ครับ เปิดจากเครื่องที่รัน start.bat แล้วเข้าเว็บด้วย IP ของเครื่องนั้น เช่น <code>http://192.168.1.x:5000</code></p>
+  </div>
+
+</main>
+
+<script>
+  // Highlight active sidebar link on scroll
+  const sections = document.querySelectorAll('.section[id]');
+  const links    = document.querySelectorAll('.sidebar a');
+
+  function updateActive() {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 80) current = s.id;
+    });
+    links.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  }
+  window.addEventListener('scroll', updateActive);
+  updateActive();
+</script>
+</body>
+</html>
