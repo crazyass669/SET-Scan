@@ -164,9 +164,9 @@ def process_stock(info_dict, close, volume):
             if first_price > 0:
                 ret_ytd = round((price - first_price) / first_price * 100, 2)
 
-        above_ema20  = bool(price > ema20)  if ema20  else None
-        above_ema50  = bool(price > ema50)  if ema50  else None
-        above_ema200 = bool(price > ema200) if ema200 else None
+        above_ema20  = bool(price > ema20)  if ema20  is not None else None
+        above_ema50  = bool(price > ema50)  if ema50  is not None else None
+        above_ema200 = bool(price > ema200) if ema200 is not None else None
 
         parts = [(ret_1m, 2), (ret_3m, 1), (ret_6m, 1), (ret_1y, 1)]
         valid = [(v, w) for v, w in parts if v is not None]
@@ -205,8 +205,8 @@ def process_stock(info_dict, close, volume):
             "rs_raw":       rs_raw,
             "rs_score":     None,
             "vol_avg20":    vol_20,
-            "high_52w":     round(float(close.tail(250).max()), 2),
-            "low_52w":      round(float(close.tail(250).min()), 2),
+            "high_52w":     round(float(close.tail(260).max()), 2),
+            "low_52w":      round(float(close.tail(260).min()), 2),
             "pe":           None,
             "pbv":          None,
             "div_yield":    None,
@@ -297,7 +297,10 @@ def fetch_market_caps_parallel(tickers, callback=None, workers=3):
                 mc   = info.get("marketCap")
                 pe   = info.get("trailingPE")
                 pbv  = info.get("priceToBook")
-                dy   = info.get("dividendYield")  # .BK: yfinance คืนเป็น % แล้ว (5.83 = 5.83%)
+                dy   = info.get("dividendYield")
+                # yfinance .BK คืน % (5.83) แต่ถ้าเปลี่ยนเป็น decimal (0.0583) ให้ normalize
+                if dy is not None and float(dy) < 1.0:
+                    dy = float(dy) * 100
                 return tick, {
                     "mkt_cap":   int(mc)          if mc  is not None else None,
                     "pe":        round(float(pe),  2) if pe  is not None else None,
